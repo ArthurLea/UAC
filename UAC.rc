@@ -1,0 +1,467 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(简体，中国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#pragma code_page(936)\r\n"
+    "#include ""res\\UAC.rc2""  // 非 Microsoft Visual C++ 编辑的资源\r\n"
+    "#include ""l.CHS\\afxres.rc""      // 标准组件\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\UAC.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 305, 182
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 UAC"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    CONTROL         IDB_BITMAP1,IDC_STATICPIC2,"Static",SS_BITMAP,14,14,22,24
+    LTEXT           "互联互通平台测试软件（下级）",IDC_STATIC,49,15,106,8,SS_NOPREFIX
+    LTEXT           "版本：1.0.2013.12.19",IDC_STATIC,49,30,84,8
+    LTEXT           "西南交通大学虚拟现实与多媒体技术实验室",IDC_STATIC,35,51,135,8,SS_NOPREFIX
+    LTEXT           "联系人：吴晓",IDC_STATIC,35,71,83,8,SS_NOPREFIX
+    LTEXT           "办公室电话：028-87600776",IDC_STATIC,35,91,103,8,SS_NOPREFIX
+    LTEXT           "手机：15108228088",IDC_STATIC,35,111,83,8,SS_NOPREFIX
+    LTEXT           "邮箱：wuxiaohk@home.swjtu.edu.cn",IDC_STATIC,35,131,124,8,SS_NOPREFIX
+    LTEXT           "版权所有（C） 2013 西南交通大学",IDC_STATIC,95,159,117,8,SS_NOPREFIX
+END
+
+IDD_UAC_DIALOG DIALOGEX 0, 0, 583, 438
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "UAC"
+FONT 9, "MS Shell Dlg", 0, 0, 0x1
+BEGIN
+    PUSHBUTTON      "退出程序",IDCANCEL,224,188,45,15
+    GROUPBOX        "本地配置",IDC_STATIC,8,28,271,53
+    LTEXT           "IP:",IDC_STATIC,20,39,25,8,SS_CENTERIMAGE
+    CTEXT           "未指定",IDC_STR_LOCAL_IP,45,53,88,8,SS_CENTERIMAGE
+    LTEXT           "端口:",IDC_STATIC,171,50,35,8,SS_CENTERIMAGE
+    CTEXT           "未指定",IDC_STR_LOCAL_PORT,223,50,45,8,SS_CENTERIMAGE
+    LTEXT           "显示名称:",IDC_STATIC,171,65,35,8,SS_CENTERIMAGE
+    CTEXT           "未指定",IDC_STR_LOCAL_NAME,224,65,44,8,SS_CENTERIMAGE
+    LTEXT           "端口:",IDC_STATIC,171,96,35,8,SS_CENTERIMAGE
+    CTEXT           "未指定",IDC_STR_REMOTE_PORT,220,96,48,8,SS_CENTERIMAGE
+    LTEXT           "地址编码:",IDC_STATIC,20,65,32,8,SS_CENTERIMAGE
+    CTEXT           "未指定",IDC_STR_LOCAL_ADD,63,65,88,8,SS_CENTERIMAGE
+    LTEXT           "IP:",IDC_STATIC,20,96,25,8,SS_CENTERIMAGE
+    CTEXT           "未指定",IDC_STR_REMOTE_IP,63,96,90,8,SS_CENTERIMAGE
+    LTEXT           "地址编码:",IDC_STATIC,20,110,32,8,SS_CENTERIMAGE
+    CTEXT           "未指定",IDC_STR_REMOTE_ADD,63,110,89,8,SS_CENTERIMAGE
+    LTEXT           "显示名称:",IDC_STATIC,171,110,35,8,SS_CENTERIMAGE
+    CTEXT           "未指定",IDC_STR_REMOTE_NAME,219,110,49,8,SS_CENTERIMAGE
+    GROUPBOX        "远程配置",IDC_STATIC,8,82,271,44
+    GROUPBOX        "测试",IDC_STATIC,8,129,271,80
+    LTEXT           "测试厂商:",IDC_STATIC,17,143,32,8,SS_CENTERIMAGE
+    COMBOBOX        IDC_BOX_TESTMEMBER,61,143,157,162,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "设置",IDC_BTN_SET,229,139,39,15
+    PUSHBUTTON      "注册",IDC_BTN_SIP_REGISTER,230,163,39,15
+    PUSHBUTTON      "日志流程",IDC_BTN_LOG,19,188,39,15
+    PUSHBUTTON      "测试报告",IDC_BTN_RESULT,81,188,39,15
+    LTEXT           "测试项目及参数配置:",IDC_STATIC,7,212,69,12,SS_CENTERIMAGE
+    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,8,228,271,174
+    LTEXT           "发送消息:",IDC_STATIC,288,220,35,8,SS_CENTERIMAGE
+    PUSHBUTTON      "清空",IDC_BTN_SEND_CLEAR,534,219,27,12
+    EDITTEXT        IDC_EDT_SENDMSG,289,233,286,169,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL,WS_EX_DLGMODALFRAME
+    LTEXT           "接收消息:",IDC_STATIC,288,33,35,8,SS_CENTERIMAGE
+    PUSHBUTTON      "清空",IDC_BTN_RECV_CLEAR,534,32,27,12
+    EDITTEXT        IDC_EDT_RECVMSG,289,48,286,169,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL,WS_EX_DLGMODALFRAME
+    CONTROL         IDB_BITMAP1,IDC_STATICPIC,"Static",SS_BITMAP,185,404,22,24
+    LTEXT           "西南交通大学    版权所有",IDC_STATIC,218,412,79,8
+    LTEXT           "关于",IDC_SABOUT,303,412,15,8,SS_NOTIFY
+    LTEXT           "广州省高速公路视频联网测试（2017）",IDC_STATICMT,210,7,236,25
+    EDITTEXT        IDC_USERNAMEC,48,165,62,14,ES_AUTOHSCROLL
+    LTEXT           "用户名：",IDC_STATIC,18,168,28,8
+    EDITTEXT        IDC_PASSWORDC,155,164,62,14,ES_AUTOHSCROLL
+    LTEXT           "密码：",IDC_STATIC,131,167,22,8
+    CONTROL         "显示保活消息",IDC_CHECK1,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,401,222,57,10
+    COMBOBOX        IDC_COMBO1,47,37,72,55,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "重启",IDC_BUTTON_REBOOT,147,188,50,16
+END
+
+IDD_DLG_NETSET DIALOGEX 0, 0, 313, 170
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LTEXT           "IP:",IDC_STATIC,14,93,40,8,SS_CENTERIMAGE
+    LTEXT           "端口:",IDC_STATIC,154,93,45,8,SS_CENTERIMAGE
+    CONTROL         "",IDC_IP_SERVER,"SysIPAddress32",WS_TABSTOP,62,93,84,12
+    EDITTEXT        IDC_EDT_SERVER_PORT,206,93,29,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "IP:",IDC_STATIC,14,22,40,8,SS_CENTERIMAGE
+    LTEXT           "UDP 端口:",IDC_STATIC,222,40,37,8,SS_CENTERIMAGE
+    CONTROL         "",IDC_IP_CLIENT,"SysIPAddress32",WS_TABSTOP,62,22,84,12
+    EDITTEXT        IDC_EDT_CLIENT_PORT,263,40,29,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "地址编码:",IDC_STATIC,14,111,45,8,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDT_SERVER_ADD,62,111,88,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "显示名称:",IDC_STATIC,154,111,45,8,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDT_SERVER_NAME,206,111,88,12,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "地址编码:",IDC_STATIC,14,40,45,8,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDT_CLIENT_ADD,62,40,104,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "显示名称:",IDC_STATIC,14,58,45,8,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDT_CLIENT_NAME,62,58,104,12,ES_CENTER | ES_AUTOHSCROLL
+    PUSHBUTTON      "修改",IDC_BTN_OK,264,144,30,15
+    GROUPBOX        "本地配置",IDC_STATIC,7,9,299,63
+    GROUPBOX        "远程配置",IDC_STATIC,7,77,299,52
+    LTEXT           "TCP 端口:",IDC_STATIC,223,58,37,8,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDT_TCP_PORT,263,58,29,12,ES_CENTER | ES_AUTOHSCROLL | ES_NUMBER
+END
+
+IDD_DLG_INVITE DIALOGEX 0, 0, 304, 230
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CTEXT           "视频实时流获取测试响应",IDC_STATIC,65,117,148,12,SS_CENTERIMAGE
+    PUSHBUTTON      "BYE",IDC_BTN_BYE,219,149,35,19
+    PUSHBUTTON      "目录操作",IDC_BUTTON1,203,77,50,14
+    COMBOBOX        IDC_ADDRESS,55,25,60,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_OPERATE,62,50,40,14,ES_AUTOHSCROLL
+    LTEXT           "设备地址：",IDC_STATIC,169,26,41,8
+    LTEXT           "操作：",IDC_STATIC,20,54,25,8
+    LTEXT           "privilege:",IDC_STATIC,180,52,30,8
+    EDITTEXT        IDC_PRIVILEGE,219,49,50,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_NAME,218,23,52,14,ES_AUTOHSCROLL
+    LTEXT           "Name:",IDC_STATIC,19,25,22,8
+    EDITTEXT        IDC_STATUS,63,76,40,14,ES_AUTOHSCROLL
+    LTEXT           "状态：",IDC_STATIC,20,79,25,8
+END
+
+IDD_DLG_CODER_SET DIALOGEX 0, 0, 306, 233
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CTEXT           "编码器参数设置测试响应",IDC_STATIC,50,95,145,14,SS_CENTERIMAGE
+END
+
+IDD_DLG_PTZ DIALOGEX 0, 0, 303, 232
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CTEXT           "云台控制测试响应",IDC_STATIC,73,98,146,18,SS_CENTERIMAGE
+END
+
+IDD_DLG_ALARM DIALOGEX 0, 0, 308, 170
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "报警取消",IDC_BTN_ALARM_CANCEL,126,136,52,17,NOT WS_VISIBLE
+    PUSHBUTTON      "时间较正",IDC_BTN_TIMESET,221,136,52,17,NOT WS_VISIBLE
+    EDITTEXT        IDC_ALARMTYPE,63,49,51,14,ES_AUTOHSCROLL
+    LTEXT           "报警类型：",IDC_STATIC,21,52,41,8
+    PUSHBUTTON      "报警通知",IDC_BTN_ALARM_NOTIFY3,34,135,52,17
+END
+
+IDD_DLG_TESTMEMBER DIALOGEX 0, 0, 265, 194
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "设置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    GROUPBOX        "添加测试厂商",IDC_STATIC,7,6,251,62
+    GROUPBOX        "测试厂商信息",IDC_STATIC,7,71,251,116
+    LTEXT           "厂商名称：",IDC_STATIC,19,25,41,13,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDT_ADDNAME,74,25,171,13,ES_CENTER | ES_AUTOHSCROLL
+    PUSHBUTTON      "添加",IDC_BTN_ADD,217,47,28,16
+    LTEXT           "测试厂商列表：",IDC_STATIC,19,91,54,13,SS_CENTERIMAGE
+    COMBOBOX        IDC_BOX_LIST,74,91,171,159,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "厂商总数：",IDC_STATIC,19,116,41,13,SS_CENTERIMAGE
+    CTEXT           "无",IDC_STR_COUNT,74,116,55,13,SS_CENTERIMAGE
+    LTEXT           "厂商平台IP：",IDC_STATIC,19,44,41,13,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDT_ADDIP,74,44,134,13,ES_CENTER | ES_AUTOHSCROLL
+    LTEXT           "厂商平台IP：",IDC_STATIC,19,142,41,13,SS_CENTERIMAGE
+    EDITTEXT        IDC_EDT_PRODUCTIP,74,142,171,13,ES_CENTER | ES_AUTOHSCROLL
+END
+
+IDD_DLG_LOG DIALOGEX 0, 0, 137, 210
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "测试流程"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CTEXT           "本地",IDC_STATIC,21,10,20,11,SS_CENTERIMAGE
+    CTEXT           "远程",IDC_STATIC,98,10,20,11,SS_CENTERIMAGE
+    PUSHBUTTON      "刷新",IDC_BTN_REFRESH,58,10,23,14
+    EDITTEXT        IDC_EDT_LOG,7,28,123,175,ES_MULTILINE | ES_AUTOHSCROLL | ES_READONLY | WS_VSCROLL,WS_EX_DLGMODALFRAME
+END
+
+IDD_DLG_VIDEOQUERY DIALOGEX 0, 0, 320, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_BORDER | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CTEXT           "历史视频查询响应",IDC_STATIC,46,87,215,11
+END
+
+IDD_DLG_VIDEOPLAY DIALOGEX 0, 0, 316, 183
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CTEXT           "历史视频回放响应",IDC_STATIC,46,87,215,11
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080403a8"
+        BEGIN
+            VALUE "CompanyName", "西南交通大学信息学院"
+            VALUE "FileDescription", "互联互通测试软件客户端"
+            VALUE "FileVersion", "2.0"
+            VALUE "InternalName", "UAC.exe"
+            VALUE "LegalCopyright", "TODO: (C) <DXP>。保留所有权利。"
+            VALUE "OriginalFilename", "UAC.exe"
+            VALUE "ProductName", "互联互通测试软件客户端"
+            VALUE "ProductVersion", "2.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 936
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 298
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 175
+    END
+
+    IDD_UAC_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 576
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 431
+    END
+
+    IDD_DLG_NETSET, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 306
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_DLG_INVITE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 297
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 223
+    END
+
+    IDD_DLG_CODER_SET, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 299
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 226
+    END
+
+    IDD_DLG_PTZ, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 296
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 225
+    END
+
+    IDD_DLG_ALARM, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 301
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 163
+    END
+
+    IDD_DLG_TESTMEMBER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 258
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 187
+    END
+
+    IDD_DLG_LOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 130
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 203
+    END
+
+    IDD_DLG_VIDEOQUERY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 313
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+
+    IDD_DLG_VIDEOPLAY, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 309
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 176
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP                  "SwjtuLOGO.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_UAC_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DLG_VIDEOQUERY AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DLG_ALARM AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_ABOUTBOX            "关于 UAC(&A)..."
+    IDP_SOCKETS_INIT_FAILED "Windows 套接字初始化失败。"
+END
+
+#endif    // 中文(简体，中国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#pragma code_page(936)
+#include "res\UAC.rc2"  // 非 Microsoft Visual C++ 编辑的资源
+#include "l.CHS\afxres.rc"      // 标准组件
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
