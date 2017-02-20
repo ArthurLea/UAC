@@ -54,7 +54,6 @@ BEGIN_MESSAGE_MAP(CAboutDlg, CDialog)
 END_MESSAGE_MAP()
 
 // CUACDlg ¶Ô»°¿ò
-
 CUACDlg::CUACDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CUACDlg::IDD, pParent)
 	, m_bIsShowKeepAliveMsg(false)
