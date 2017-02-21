@@ -81,6 +81,7 @@
 #define IDC_NAME                        1054
 #define IDC_EDIT1                       1055
 #define IDC_STATUS                      1055
+#define IDC_EDIT_ENCODERPARAM           1055
 #define IDC_COMBO1                      1056
 #define IDC_BUTTON_REBOOT               1057
 
@@ -88,7 +89,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        142
+#define _APS_NEXT_RESOURCE_VALUE        143
 #define _APS_NEXT_COMMAND_VALUE         32771
 #define _APS_NEXT_CONTROL_VALUE         1058
 #define _APS_NEXT_SYMED_VALUE           101

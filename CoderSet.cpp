@@ -23,6 +23,7 @@ CCoderSet::~CCoderSet()
 void CCoderSet::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_EDIT_ENCODERPARAM, m_EncoderParam);
 }
 
 

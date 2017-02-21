@@ -837,7 +837,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 	/***********************************************************************/
 	/*这里是各种"DO"请求的XML解析 writed by Bsp Lee                          */
 	/***********************************************************************/
-	else if (  m_SipMsg.msg->status_code==0 && strcmp(m_SipMsg.msg->sip_method,"DO")==0 )
+	else if (m_SipMsg.msg->status_code==0 && strcmp(m_SipMsg.msg->sip_method,"DO")==0 )
 	{		
 		//analyse XML message
 		osip_body_t *XMLbody;
@@ -1070,19 +1070,19 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			pWnd->ShowTestLogData="<--------- DO\r\n";			
 			pWnd->ShowTestLogTitle="History Video Query Test";
 		}
-		else if (strcmp(var,"ItemList")==0)
+		else if (strcmp(var,"ItemList")==0)//DeviceCatalogInfQuery
 		{
-			m_Type=CatalogQuery;			
+			m_Type = CatalogQuery;			
 			//Update log
 			pWnd->ShowTestLogData="<--------- DO\r\n";			
-			pWnd->ShowTestLogTitle="Catalog Query Test";
+			pWnd->ShowTestLogTitle="Device Catalog Query Test";
 		}
-		else if (strcmp(var,"DeviceInfo")==0)
+		else if (strcmp(var,"DeviceInfo")==0)//DeviceInfQuery
 		{
 			m_Type=DeviceInfQuery;			
 			//Update log
 			pWnd->ShowTestLogData="<--------- DO\r\n";			
-			pWnd->ShowTestLogTitle="Catalog Query Test";
+			pWnd->ShowTestLogTitle="Device Query Test";
 		}
 		else if (strcmp(var,"BandWidth")==0)
 		{
@@ -1100,8 +1100,8 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 		}
 		else if (strcmp(var,"EncoderSet")==0 )
 		{
-			m_Type=EncoderSet;
-			pWnd->CurStatusID.nSataus=EncoderSet;
+			m_Type = EncoderSet;
+			pWnd->CurStatusID.nSataus = EncoderSet;
 			//update log
 			pWnd->ShowTestLogData=" <--------  DO \r\n";		
 			pWnd->ShowTestLogTitle="Encoder Set Test";
@@ -1662,14 +1662,15 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			int index2=st.find("</Address>");
 			if (index2==string::npos)
 			{
-				AfxMessageBox("目录查询，缺少Address字段！",MB_OK|MB_ICONERROR);
+				AfxMessageBox("目录查询，缺少/Address字段！",MB_OK|MB_ICONERROR);
 			}
 			string strT=st.substr(index+9,index2-index-9);
 			if (strT.compare("")==0)
 			{
 				AfxMessageBox("目录查询，Address字段为空！",MB_OK|MB_ICONERROR);
 			}
-			if (strT.compare("252000001199000001")==0)
+			//252000001199000001 == pWnd->m_InfoClient.UserAddress
+			if (strT.compare("252000001199000001")==0)//252000001199000001目录节点
 			{
 				char *xml=new char[XMLSIZE];			
 				CreateXMLCatalogQuery(&xml);
@@ -1685,10 +1686,10 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 				delete dest;
 				delete xml;
 			}
-			if (strT.compare("252000001199002001")==0)
+			if ((strT.compare("252000001201001001")==0) || (strT.compare("252000001301001001")==0))//252000001201001001 ||　252000001301001001子节点
 			{
 				char *xml=new char[XMLSIZE];
-				CreateXMLCatalogQuery2(&xml);
+				CreateXMLCatalogQueryNote(&xml);
 				char *dest=new char[MAXBUFSIZE];
 				Sip200Xml(&dest,m_SipMsg.msg,xml);
 				//pWnd->SendData(dest);
@@ -1792,14 +1793,14 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			char *dstEncoderSetMsg=new char[MAXBUFSIZE];
 			if( XmlEncoderSetCreate(&dst,XmlMessage) )
 			{
+				//UAC端编码器参数设置测试显示pWnd->m_CoderSet.m_EncoderParam
+				ShowEncoderParam(buffer);
 				Sip200Xml(&dstEncoderSetMsg,m_SipMsg.msg,dst);
-				//pWnd->SendData(dstEncoderSetMsg);	
 				UA_Msg uac_sendtemp;
 				strcpy(uac_sendtemp.data,dstEncoderSetMsg);
 				EnterCriticalSection(&g_uac);
 				uac_sendqueue.push(uac_sendtemp);
 				LeaveCriticalSection(&g_uac);
-				//pWnd->ShowSendData(dstEncoderSetMsg);
 				delete dst;		
 				delete dstEncoderSetMsg;
 				//update log
@@ -1808,13 +1809,11 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			else
 			{
 				Sip400(&dstEncoderSetMsg,m_SipMsg.msg);
-				//pWnd->SendData(dstEncoderSetMsg);	
 				UA_Msg uac_sendtemp;
 				strcpy(uac_sendtemp.data,dstEncoderSetMsg);
 				EnterCriticalSection(&g_uac);
 				uac_sendqueue.push(uac_sendtemp);
 				LeaveCriticalSection(&g_uac);
-				//pWnd->ShowSendData(dstEncoderSetMsg);
 				//update log
 				pWnd->ShowTestLogData+="400  -------->\r\n";	
 				delete dst;		
@@ -2678,25 +2677,31 @@ BOOL CSipMsgProcess::XmlPTZCreate(char** strPTZXml,char *srcXml)
 BOOL CSipMsgProcess::XmlEncoderSetCreate(char** strEncoderSetXml,char *srcXml)
 {
 	string strTemp(srcXml);		
-	string UserCode;	
+	string Privilege;
+	//HWND   hnd = ::FindWindow(NULL, _T("UAC"));
+	//CUACDlg*  pWnd = (CUACDlg*)CWnd::FromHandle(hnd);
 	string::size_type VariableStart;	
 	string::size_type VariableEnd;
-	if( (VariableStart=strTemp.find("<Privilege>",0)) ==string::npos)			
+	if ((VariableStart = strTemp.find("<Privilege>", 0)) == string::npos)
+	{
+		AfxMessageBox("编码器设置，缺少Privilege字段！", MB_OK | MB_ICONERROR);
 		return FALSE;						
-	if ( (VariableEnd=strTemp.find("</Privilege>",VariableStart+1)) ==string::npos)		
-		return FALSE;	
-	UserCode=strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11);	
+	}
+	if ((VariableEnd = strTemp.find("</Privilege>", VariableStart + 1)) == string::npos)
+	{
+		AfxMessageBox("编码器设置，缺少/Privilege字段！", MB_OK | MB_ICONERROR);
+		return FALSE;
+	}
+	Privilege = strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11);
 	string XmlEncoderSet;
-	XmlEncoderSet="<?xml version=\"1.0\"?>\r\n";
-	XmlEncoderSet+="<Response>\r\n";
-	XmlEncoderSet+="<ControlResponse>\r\n";
-	XmlEncoderSet+="<Variable>EncoderSet</Variable>\r\n";
-	XmlEncoderSet+="<Result>0</Result>\r\n";
-	XmlEncoderSet+="<Privilege>";
-	XmlEncoderSet+=UserCode;
-	XmlEncoderSet+="</Privilege>\r\n";
-	XmlEncoderSet+="</ControlResponse>\r\n";
-	XmlEncoderSet+="</Response>\r\n";	
+	XmlEncoderSet = "<?xml version=\"1.0\"?>\r\n";
+	XmlEncoderSet += "<Response>\r\n";
+	XmlEncoderSet += "<ControlResponse>\r\n";
+	XmlEncoderSet += "<Variable>EncoderSet</Variable>\r\n";
+	XmlEncoderSet += "<Result>0</Result>\r\n";
+	XmlEncoderSet += "<Privilege>"+ Privilege + "</Privilege>\r\n";
+	XmlEncoderSet += "</ControlResponse>\r\n";
+	XmlEncoderSet += "</Response>\r\n";	
 	strcpy(*strEncoderSetXml,XmlEncoderSet.c_str());	
 	return TRUE;
 }
@@ -3602,107 +3607,129 @@ int CSipMsgProcess::CreateXMLCatalogQuery(char **dstXML)
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
 	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
 	CString strTemp;
-	strTemp="<?xml version=\"1.0\"?>\r\n";
-	strTemp+="<Response>\r\n";
-	strTemp+="<QueryResponse>\r\n";
-	strTemp+="<Variable>ItemList</Variable>\r\n";
-	strTemp+="<Parent>"+pWnd->m_InfoClient.UserAddress+"</Parent>\r\n";	
-	strTemp+="<TotalSubNum>30</TotalSubNum>\r\n";
-	strTemp+="<TotalOnlineSubNum>2</TotalOnlineSubNum>\r\n";
-	strTemp+="<FromIndex>1</FromIndex>\r\n";
-	strTemp+="<ToIndex>2</ToIndex>\r\n";
-	strTemp+="<SubNum>2</SubNum>\r\n";
-	strTemp+="<SubList>\r\n";
+	strTemp = "<?xml version=\"1.0\"?>\r\n";
+	strTemp += "<Response>\r\n";
+	strTemp += "<QueryResponse>\r\n";
+	strTemp += "<Variable>ItemList</Variable>\r\n";
+	strTemp += "<Parent>"+pWnd->m_InfoClient.UserAddress+"</Parent>\r\n";	
+	strTemp += "<TotalSubNum>30</TotalSubNum>\r\n";
+	strTemp += "<TotalOnlineSubNum>3</TotalOnlineSubNum>\r\n";
+	strTemp += "<FromIndex>1</FromIndex>\r\n";
+	strTemp += "<ToIndex>3</ToIndex>\r\n";
+	strTemp += "<SubNum>3</SubNum>\r\n";
+	strTemp += "<SubList>\r\n";
+	
+	//CATLOG 1
+	strTemp += "<Item>\r\n";
+	strTemp += "<Name>CATLOG 01</Name>\r\n";
+	strTemp += "<Address>252000001201001001</Address>\r\n";
+	strTemp += "<ResType>0</ResType>\r\n";
+	strTemp += "<ResSubType>0</ResSubType>\r\n";
+	strTemp += "<Privilege>%00%01</Privilege>\r\n";
+	strTemp += "<Status>0</Status>\r\n";
+	strTemp += "<Longitude>54</Longitude>\r\n";
+	strTemp += "<Latitude>453</Latitude>\r\n";
+	strTemp += "<Elevation>35</Elevation>\r\n";
+	strTemp += "<Roadway>42</Roadway>\r\n";
+	strTemp += "<PileNo>52</PileNo>\r\n";
+	strTemp += "<AreaNo>1</AreaNo>\r\n";
+	strTemp += "<UpdateTime>20170222T130000Z</UpdateTime>\r\n";
+	strTemp += "</Item>\r\n";
 
-	strTemp+="<Item>\r\n";
-	strTemp+="<Name>IPC</Name>\r\n";
-	strTemp+="<Address>252000001103002001</Address>\r\n";
-	strTemp+="<ResType>1</ResType>\r\n";
-	strTemp+="<ResSubType>1</ResSubType>\r\n";
-	strTemp+="<Privilege>%02</Privilege>\r\n";
-	strTemp+="<Status>0</Status>\r\n";
-	strTemp+="<Longitude>23</Longitude>\r\n";
-	strTemp+="<Latitude>78</Latitude>\r\n";
-	strTemp+="<Elevation>532</Elevation>\r\n";
-	 strTemp+="<Roadway>523</Roadway>\r\n";
-	 strTemp+="<PileNo>245</PileNo>\r\n";
-	 strTemp+="<AreaNo>1</AreaNo>\r\n";
-	 strTemp+="<UpdateTime>20130418T120000Z</UpdateTime>\r\n";
-	 strTemp+="</Item>\r\n";
+	//CATLOG 2
+	strTemp += "<Item>\r\n";
+	strTemp += "<Name>CATLOG 02</Name>\r\n";
+	strTemp += "<Address>252000001301001001</Address>\r\n";
+	strTemp += "<ResType>0</ResType>\r\n";
+	strTemp += "<ResSubType>0</ResSubType>\r\n";
+	strTemp += "<Privilege>%00%01</Privilege>\r\n";
+	strTemp += "<Status>0</Status>\r\n";
+	strTemp += "<Longitude>52</Longitude>\r\n";
+	strTemp += "<Latitude>423</Latitude>\r\n";
+	strTemp += "<Elevation>25</Elevation>\r\n";
+	strTemp += "<Roadway>52</Roadway>\r\n";
+	strTemp += "<PileNo>32</PileNo>\r\n";
+	strTemp += "<AreaNo>1</AreaNo>\r\n";
+	strTemp += "<UpdateTime>20170222T130000Z</UpdateTime>\r\n";
+	strTemp += "</Item>\r\n";
 
-	 strTemp+="<Item>\r\n";
-	 strTemp+="<Name>CATLOG</Name>\r\n";
-	 strTemp+="<Address>252000001199002001</Address>\r\n";
-	 strTemp+="<ResType>0</ResType>\r\n";
-	 strTemp+="<ResSubType>0</ResSubType>\r\n";
-	 strTemp+="<Privilege>%00%01</Privilege>\r\n";
-	 strTemp+="<Status>0</Status>\r\n";
-	 strTemp+="<Longitude>54</Longitude>\r\n";
-	 strTemp+="<Latitude>453</Latitude>\r\n";
-	 strTemp+="<Elevation>35</Elevation>\r\n";
-	 strTemp+="<Roadway>42</Roadway>\r\n";
-	 strTemp+="<PileNo>52</PileNo>\r\n";
-	 strTemp+="<AreaNo>1</AreaNo>\r\n";
-	 strTemp+="<UpdateTime>20130422T130000Z</UpdateTime>\r\n";
-	 strTemp+="</Item>\r\n";
-	 strTemp+="</SubList>\r\n";
-	 strTemp+="</QueryResponse>\r\n";
-	 strTemp+="</Response>\r\n";
+	//IPC 01
+	strTemp += "<Item>\r\n";
+	strTemp += "<Name>IPC 01</Name>\r\n";
+	strTemp += "<Address>252000001102001001</Address>\r\n";
+	strTemp += "<ResType>1</ResType>\r\n";
+	strTemp += "<Privilege>%11%02</Privilege>\r\n";
+	strTemp += "<SeriesNumber>000000000213</SeriesNumber>\r\n";
+	strTemp += "<Status>0</Status>\r\n";
+	strTemp += "<Longitude>20</Longitude>\r\n";
+	strTemp += "<Latitude>20</Latitude>\r\n";
+	strTemp += "<Roadway>20</Roadway>\r\n";
+	strTemp += "<Elevation>20</Elevation>\r\n";
+	strTemp += "<PileNo>20</PileNo>\r\n";
+	strTemp += "<Manufacturer>海康威视</Manufacturer>\r\n";
+	strTemp += "<Model>20</Model>\r\n";
+	strTemp += "<Chip>20</Chip>\r\n";
+	strTemp += "<OperateType>ADD</OperateType>\r\n";
+	strTemp += "</Item>\r\n";
 
+	strTemp += "</SubList>\r\n";
+	strTemp += "</QueryResponse>\r\n";
+	strTemp += "</Response>\r\n";
 	char *dst=(LPSTR)(LPCTSTR)strTemp;	
 	strcpy(*dstXML,dst);
 	return 0;
 }
 
-int CSipMsgProcess::CreateXMLCatalogQuery2(char **dstXML)
+int CSipMsgProcess::CreateXMLCatalogQueryNote(char **dstXML)
 {
 	CString strTemp;
-	strTemp="<?xml version=\"1.0\"?>\r\n";
-	strTemp+="<Response>\r\n";
-	strTemp+="<QueryResponse>\r\n";
-	strTemp+="<Variable>ItemList</Variable>\r\n";
-	strTemp+="<Parent>0</Parent>\r\n";	
-	strTemp+="<TotalSubNum>45</TotalSubNum>\r\n";
-	strTemp+="<TotalOnlineSubNum>1</TotalOnlineSubNum>\r\n";
-	strTemp+="<FromIndex>1</FromIndex>\r\n";
-	strTemp+="<ToIndex>1</ToIndex>\r\n";
-	strTemp+="<SubNum>1</SubNum>\r\n";
-	strTemp+="<SubList>\r\n";
+	strTemp = "<?xml version=\"1.0\"?>\r\n";
+	strTemp += "<Response>\r\n";
+	strTemp += "<QueryResponse>\r\n";
+	strTemp += "<Variable>ItemList</Variable>\r\n";
+	strTemp += "<Parent>0</Parent>\r\n";	
+	strTemp += "<TotalSubNum>45</TotalSubNum>\r\n";
+	strTemp += "<TotalOnlineSubNum>2</TotalOnlineSubNum>\r\n";
+	strTemp += "<FromIndex>1</FromIndex>\r\n";
+	strTemp += "<ToIndex>2</ToIndex>\r\n";
+	strTemp += "<SubNum>2</SubNum>\r\n";
+	strTemp += "<SubList>\r\n";
 
-	strTemp+="<Item>\r\n";
-	strTemp+="<Name>calist</Name>\r\n";
-	strTemp+="<Address>135341</Address>\r\n";
-	strTemp+="<ResType>0</ResType>\r\n";
-	strTemp+="<ResSubType>1</ResSubType>\r\n";
-	strTemp+="<Privilege>321345</Privilege>\r\n";
-	strTemp+="<Status>1</Status>\r\n";
-	strTemp+="<Longitude>23</Longitude>\r\n";
-	strTemp+="<Latitude></Latitude>\r\n";
-	strTemp+="<Elevation>532</Elevation>\r\n";
-	strTemp+="<Roadway>523</Roadway>\r\n";
-	strTemp+="<PileNo>245</PileNo>\r\n";
-	strTemp+="<AreaNo>531</AreaNo>\r\n";
-	strTemp+="<UpdateTime>20130418T120000Z</UpdateTime>\r\n";
-	strTemp+="</Item>\r\n";
+	strTemp += "<Item>\r\n";
+	strTemp += "<Name>IPC 01</Name>\r\n";
+	strTemp += "<Address>252000001111002001</Address>\r\n";
+	strTemp += "<ResType>1</ResType>\r\n";
+	strTemp += "<ResSubType>1</ResSubType>\r\n";
+	strTemp += "<Privilege>321345</Privilege>\r\n";
+	strTemp += "<Status>1</Status>\r\n";
+	strTemp += "<Longitude>23</Longitude>\r\n";
+	strTemp += "<Latitude></Latitude>\r\n";
+	strTemp += "<Elevation>532</Elevation>\r\n";
+	strTemp += "<Roadway>523</Roadway>\r\n";
+	strTemp += "<PileNo>245</PileNo>\r\n";
+	strTemp += "<AreaNo>531</AreaNo>\r\n";
+	strTemp += "<UpdateTime>20170222T130000Z</UpdateTime>\r\n";
+	strTemp += "</Item>\r\n";
 
-	strTemp+="<Item>\r\n";
-	strTemp+="<Name>list2</Name>\r\n";
-	strTemp+="<Address>545434</Address>\r\n";
-	strTemp+="<ResType>4</ResType>\r\n";
-	strTemp+="<ResSubType>5</ResSubType>\r\n";
-	strTemp+="<Privilege>34565</Privilege>\r\n";
-	strTemp+="<Status>5</Status>\r\n";
-	strTemp+="<Longitude>54</Longitude>\r\n";
-	strTemp+="<Latitude>453</Latitude>\r\n";
-	strTemp+="<Elevation>35</Elevation>\r\n";
-	strTemp+="<Roadway>42</Roadway>\r\n";
-	strTemp+="<PileNo>52</PileNo>\r\n";
-	strTemp+="<AreaNo>25</AreaNo>\r\n";
-	strTemp+="<UpdateTime>20130422T130000Z</UpdateTime>\r\n";
-	strTemp+="</Item>\r\n";
-	strTemp+="</SubList>\r\n";
-	strTemp+="</QueryResponse>\r\n";
-	strTemp+="</Response>\r\n";
+	strTemp += "<Item>\r\n";
+	strTemp += "<Name>IPC 02</Name>\r\n";
+	strTemp += "<Address>252000001112002001</Address>\r\n";
+	strTemp += "<ResType>4</ResType>\r\n";
+	strTemp += "<ResSubType>5</ResSubType>\r\n";
+	strTemp += "<Privilege>34565</Privilege>\r\n";
+	strTemp += "<Status>5</Status>\r\n";
+	strTemp += "<Longitude>54</Longitude>\r\n";
+	strTemp += "<Latitude>453</Latitude>\r\n";
+	strTemp += "<Elevation>35</Elevation>\r\n";
+	strTemp += "<Roadway>42</Roadway>\r\n";
+	strTemp += "<PileNo>52</PileNo>\r\n";
+	strTemp += "<AreaNo>25</AreaNo>\r\n";
+	strTemp += "<UpdateTime>20170222T130000Z</UpdateTime>\r\n";
+	strTemp += "</Item>\r\n";
+
+	strTemp += "</SubList>\r\n";
+	strTemp += "</QueryResponse>\r\n";
+	strTemp += "</Response>\r\n";
 
 	char *dst=(LPSTR)(LPCTSTR)strTemp;	
 	strcpy(*dstXML,dst);
@@ -3809,4 +3836,56 @@ void CSipMsgProcess::SipBYE(char **dst,osip_message_t *srcmsg)
 	memset(*dst,0,MAXBUFSIZE);
 	memcpy(*dst,dest,len);
 	osip_free(dest);
+}
+
+/**
+将编码器设置参数显示到UAC端
+**/
+void CSipMsgProcess::ShowEncoderParam(char * buffer)
+{
+	CString Format;
+	CString FrameRate;
+	CString BitRate;
+	CString Priority;
+	CString GOP;
+	CString ImageQuality;
+	string str = buffer;
+
+	int fmtStart = str.find("<Format>", 0);
+	int fmtEnd = str.find("</Format>", 0);
+	Format = str.substr(fmtStart + 8, fmtEnd - fmtStart - 8).c_str();	
+
+	int fmrStart = str.find("<FrameRate>", 0);
+	int fmrEnd = str.find("</FrameRate>", 0);
+	FrameRate = str.substr(fmrStart + 11, fmrEnd - fmrStart - 11).c_str();
+
+	int brStart = str.find("<BitRate>", 0);
+	int brEnd = str.find("</BitRate>", 0);
+	BitRate = str.substr(brStart + 9, brEnd - brStart - 9).c_str();
+
+	int gopStart = str.find("<GOP>", 0);
+	int gopEnd = str.find("</GOP>", 0);
+	GOP = str.substr(gopStart + 5, gopEnd - gopStart - 5).c_str();
+
+	int pryStart = str.find("<Priority>", 0);
+	int pryEnd = str.find("</Priority>", 0);
+	Priority = str.substr(pryStart + 10, pryEnd - pryStart - 10).c_str();
+
+	int imgqlyStart = str.find("<ImageQuality>", 0);
+	int imgqlyEnd = str.find("</ImageQuality>", 0);
+	ImageQuality = str.substr(imgqlyStart + 14, imgqlyEnd - imgqlyStart - 14).c_str();
+
+	CString EncoderParam;
+
+	EncoderParam += "Format: " + Format + "\r\n";
+	EncoderParam += "FrameRate: " + FrameRate + "\r\n";
+	EncoderParam += "BitRate: " + BitRate + "\r\n";
+	EncoderParam += "GOP: " + GOP + "\r\n";
+	EncoderParam += "Priority: " + Priority + "\r\n";
+	EncoderParam += "ImageQuality: " + ImageQuality + "\r\n";
+
+	HWND   hnd = ::FindWindow(NULL, _T("UAC"));
+	CUACDlg*  pWnd = (CUACDlg*)CWnd::FromHandle(hnd);
+	pWnd->m_CoderSet.m_EncoderParam.SetWindowTextA(EncoderParam);
+	pWnd->m_CoderSet.GetDlgItem(IDC_EDIT_ENCODERPARAM)->SendMessage(WM_VSCROLL, SB_BOTTOM, 0);
 }
