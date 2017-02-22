@@ -73,17 +73,25 @@
 #define IDC_PASSWORDC                   1047
 #define IDC_OPERATE                     1047
 #define IDC_CHECK1                      1048
+#define IDC_EDIT_LEVEL                  1048
 #define IDC_ALARMTYPE                   1049
 #define IDC_BUTTON1                     1050
+#define IDC_EDIT_ACCEPTPORT             1050
 #define IDC_ADDRESS                     1051
+#define IDC_ALARMTYPENUM                1051
 #define IDC_EDIT3                       1053
 #define IDC_PRIVILEGE                   1053
 #define IDC_NAME                        1054
 #define IDC_EDIT1                       1055
 #define IDC_STATUS                      1055
 #define IDC_EDIT_ENCODERPARAM           1055
+#define IDC_EDIT_ADDRESS                1055
 #define IDC_COMBO1                      1056
+#define IDC_EDIT_PRIVILEGE              1056
 #define IDC_BUTTON_REBOOT               1057
+#define IDC_EDIT_ACCEPTIP               1057
+#define IDC_COMBO_ALARMTYPENAME         1058
+#define IDC_COMBO4                      1060
 
 // Next default values for new objects
 // 
@@ -91,7 +99,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        143
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1058
+#define _APS_NEXT_CONTROL_VALUE         1061
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

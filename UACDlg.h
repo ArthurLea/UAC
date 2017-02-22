@@ -46,6 +46,7 @@ protected:
 public:
 	void InitProgram();
 	void InitNetSet();
+	void InitAlarm();
 	void InitEnableWindow();
 	int InitSocket(int port);
 	void ShowSendData(CString StrSendData);
@@ -75,7 +76,7 @@ public:
 	vector <ProductMember> ProductTestMember;
 	InfoServer m_InfoServer;
 	InfoClient m_InfoClient;	
-	InfoAlarm m_InfoAlarm;
+	vector<InfoAlarm> m_InfoAlarm;
 	BOOL balarmsubscribe;
 	char alarmTag[50];	
 	char invite100tag[50];
@@ -90,8 +91,10 @@ public:
 	BOOL bRealTimeFlag;
 	int nRealTimeCount;
 	int nKeepTimeCount;
+
 	//事件的CallID
-	char AlarmCallID[100];
+	/*modified by Bsp Lee*/
+	vector<string> AlarmCallID;//UAC端对UAS的事件预警CallID的存储
 	CallID RegisterCallID;
 	CallID KeepAliveID;
 	CallID TimeSetID;

@@ -73,6 +73,7 @@ struct InfoAlarm
 	string Address;
 	string AcceptIP;
 	string AcceptPort;
+	string CallID;
 };
 struct UA_Msg
 {

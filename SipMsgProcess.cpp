@@ -94,8 +94,9 @@ int CSipMsgProcess::SipRegisterCreate(char **strRegister,InfoServer m_InfoServer
 	osip_via_set_branch(SipRegister->m_SipMsg.via,branch);//随机数
 	osip_via_set_host(SipRegister->m_SipMsg.via,srcIP);
 
-	osip_call_id_set_host(SipRegister->m_SipMsg.callid,srcIP);
+	//osip_call_id_set_host(SipRegister->m_SipMsg.callid, srcIP);
 	osip_call_id_set_number(SipRegister->m_SipMsg.callid,CallID);//随机数
+
 	//保留本注册的消息的CallID信息
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
 	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
@@ -215,7 +216,7 @@ int CSipMsgProcess::SipRegisterWithAuthCreate(char **strRegister,InfoServer m_In
 // 	osip_via_set_branch(SipRegister->m_SipMsg.via,branch);//随机数
 	osip_via_set_host(SipRegister->m_SipMsg.via,srcIP);
 
-	osip_call_id_set_host(SipRegister->m_SipMsg.callid,srcIP);
+	//osip_call_id_set_host(SipRegister->m_SipMsg.callid, srcIP);
 	osip_call_id_set_number(SipRegister->m_SipMsg.callid,CallID);//随机数
 	//保留本注册的消息的CallID信息
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
@@ -619,7 +620,7 @@ void CSipMsgProcess::SipNodeXmlMsg(char **strNode,InfoServer m_InfoServer,InfoCl
 	osip_via_set_branch(SipNode->m_SipMsg.via, branch);//随机数
 	osip_via_set_host(SipNode->m_SipMsg.via,srcIP);
 
-	osip_call_id_set_host(SipNode->m_SipMsg.callid,srcIP);
+	//osip_call_id_set_host(SipNode->m_SipMsg.callid, srcIP);
 	osip_call_id_set_number(SipNode->m_SipMsg.callid,CallID);//随机数
 	//保留本注册的消息的CallID信息
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
@@ -700,23 +701,21 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 		AfxMessageBox("OSIP解析初始化失败",MB_OK|MB_ICONERROR);
 		return 1;
 	}
-	int i=osip_message_parse(m_SipMsg.msg,buffer,Msglength);
-
-	//m_SipMsg.msg->message = buffer;//初始化mes->message,以获取expires，max_forward等
-
+	int i = osip_message_parse(m_SipMsg.msg,buffer,Msglength);
 	if (i!=OSIP_SUCCESS)
 	{	
 		AfxMessageBox("SIP消息解析错误",MB_OK|MB_ICONERROR);
 		return 1;		
 	}
+	//m_SipMsg.msg->message = buffer;//初始化mes->message,以获取expires，max_forward等
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
 	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);	
-	char *Alarmtemp=NULL;
-	if (m_SipMsg.msg->call_id->host==NULL)
-	{		
-		osip_call_id_to_str(m_SipMsg.msg->call_id,&Alarmtemp);
-		m_SipMsg.msg->call_id->host="";
-	}
+	//char *Alarmtemp=NULL;
+	//if (m_SipMsg.msg->call_id->host==NULL)
+	//{		
+	//	osip_call_id_to_str(m_SipMsg.msg->call_id,&(Common::nowReservingEventMsg_ArarmCallID));
+	//	m_SipMsg.msg->call_id->host="";
+	//}
 	if (m_SipMsg.msg->call_id->number==NULL)
 	{
 		m_SipMsg.msg->call_id->number="";
@@ -728,12 +727,21 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 		}		
 	}	
 	char *XmlMessage=new char[XMLSIZE];
-	memset(XmlMessage,0,XMLSIZE);
+	memset(XmlMessage,0,XMLSIZE);		
+	osip_body_t *XMLbody;
+	string strXmlMsg;
+	osip_body_init(&XMLbody);
+	osip_message_get_body(m_SipMsg.msg, 0, &XMLbody);
+	if (XMLbody != NULL)
+	{
+		memcpy(XmlMessage, XMLbody->body, strlen(XMLbody->body));
+		strXmlMsg = XmlMessage;
+	}
+
 	//判断事件类型
-	if (  strcmp(m_SipMsg.msg->call_id->host,pWnd->RegisterCallID.Host)==0 	&&
-		strcmp(m_SipMsg.msg->call_id->number,pWnd->RegisterCallID.Num)==0  )
+//receive register message
+	if(strcmp(m_SipMsg.msg->cseq->method,"REGISTER")==0 && strcmp(m_SipMsg.msg->call_id->number, pWnd->RegisterCallID.Num)==0)
 	{		
-		//receive register message
 		if ( !RegisterSipVerify(pWnd->m_InfoServer,pWnd->m_InfoClient,m_SipMsg.msg,1))
 		{
 			AfxMessageBox("Register From 或 To字段校验不通过",MB_OK|MB_ICONERROR);
@@ -754,7 +762,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 		osip_uri_param_free(h);
 		if (strcmp(Tag,pWnd->RegisterCallID.Tag)==0)
 		{
-			m_Type=Register;	
+			m_Type = Register;	
 		}
 		else
 		{
@@ -834,9 +842,11 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 		//pWnd->ShowSendData(dst);
 		delete dst;			
 	}
-	/***********************************************************************/
-	/*这里是各种"DO"请求的XML解析 writed by Bsp Lee                          */
-	/***********************************************************************/
+/***********************************************************************/
+/*这里是各种"DO"请求的XML解析 writed by Bsp Lee                          */
+/*PTZCommand PresetList FileList VODByRTSP */
+/*ItemList DeviceInfo BandWidth EncoderSet TimeSet RealTimeKeepAlive*/
+/***********************************************************************/
 	else if (m_SipMsg.msg->status_code==0 && strcmp(m_SipMsg.msg->sip_method,"DO")==0 )
 	{		
 		//analyse XML message
@@ -854,15 +864,12 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			delete XmlMessage;
 			char *dst=new char[MAXBUFSIZE];
 			Sip400(&dst,m_SipMsg.msg);
-			//pWnd->SendData(dst);	
 			UA_Msg uac_sendtemp;
 			strcpy(uac_sendtemp.data,dst);
 			EnterCriticalSection(&g_uac);
 			uac_sendqueue.push(uac_sendtemp);
 			LeaveCriticalSection(&g_uac);
-			//pWnd->ShowSendData(dst);
 			delete dst;			
-			//update log
 			pWnd->ShowTestLogData+="400 --------> \r\n";
 			AfxMessageBox("缺少Variable字段");
 			return 1;
@@ -872,15 +879,12 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			delete XmlMessage;
 			char *dst=new char[MAXBUFSIZE];
 			Sip400(&dst,m_SipMsg.msg);
-			//pWnd->SendData(dst);	
 			UA_Msg uac_sendtemp;
 			strcpy(uac_sendtemp.data,dst);
 			EnterCriticalSection(&g_uac);
 			uac_sendqueue.push(uac_sendtemp);
 			LeaveCriticalSection(&g_uac);
-			//pWnd->ShowSendData(dst);
 			delete dst;			
-			//update log
 			pWnd->ShowTestLogData+="400 --------> \r\n";
 			AfxMessageBox("缺少Variable字段");
 			return 1;
@@ -1070,12 +1074,12 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			pWnd->ShowTestLogData="<--------- DO\r\n";			
 			pWnd->ShowTestLogTitle="History Video Query Test";
 		}
-		else if (strcmp(var,"ItemList")==0)//DeviceCatalogInfQuery
+		else if (strcmp(var,"VODByRTSP")==0)
 		{
-			m_Type = CatalogQuery;			
+			m_Type=HistoryPlay;			
 			//Update log
-			pWnd->ShowTestLogData="<--------- DO\r\n";			
-			pWnd->ShowTestLogTitle="Device Catalog Query Test";
+			pWnd->ShowTestLogData="<---------- DO\r\n";		
+			pWnd->ShowTestLogTitle="Get History Video URL Test";
 		}
 		else if (strcmp(var,"DeviceInfo")==0)//DeviceInfQuery
 		{
@@ -1084,19 +1088,19 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			pWnd->ShowTestLogData="<--------- DO\r\n";			
 			pWnd->ShowTestLogTitle="Device Query Test";
 		}
+		else if (strcmp(var,"ItemList")==0)//DeviceCatalogInfQuery
+		{
+			m_Type = CatalogQuery;			
+			//Update log
+			pWnd->ShowTestLogData="<--------- DO\r\n";			
+			pWnd->ShowTestLogTitle="Device Catalog Query Test";
+		}
 		else if (strcmp(var,"BandWidth")==0)
 		{
 			m_Type=FlowQuery;			
 			//Update log
 			pWnd->ShowTestLogData="<--------- DO\r\n";			
 			pWnd->ShowTestLogTitle="Catalog Query Test";
-		}
-		else if (strcmp(var,"VODByRTSP")==0)
-		{
-			m_Type=HistoryPlay;			
-			//Update log
-			pWnd->ShowTestLogData="<---------- DO\r\n";		
-			pWnd->ShowTestLogTitle="Get History Video URL Test";
 		}
 		else if (strcmp(var,"EncoderSet")==0 )
 		{
@@ -1135,19 +1139,18 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			return 1;
 		}
 	}
-	else if (MSG_IS_SUBSCRIBE(m_SipMsg.msg))
+//receive subscribe message from sever
+	else if (MSG_IS_SUBSCRIBE(m_SipMsg.msg))//这里有报警预定的UAC处理
 	{
-		//receive subscribe message from sever		
-		m_Type=Alarm;		
+		m_Type = Alarm;		
 		pWnd->balarmsubscribe=TRUE;
 		//update log
 		pWnd->ShowTestLogData="<--------  SUBSCRIBE\r\n";			
 		pWnd->ShowTestLogTitle="Alarm Subscribe Test";
 	}
-	else if ( strcmp(m_SipMsg.msg->call_id->host,pWnd->KeepAliveID.Host)==0 && 
-		strcmp(m_SipMsg.msg->call_id->number,pWnd->KeepAliveID.Num)==0 )
+//receive keepAlive message
+	else if ((strXmlMsg.find("KeepAlive",0)!=string::npos)&&(strcmp(m_SipMsg.msg->call_id->number,pWnd->KeepAliveID.Num)==0))
 	{
-		//receive keepAlive message
 		if ( !SipVerify(pWnd->m_InfoServer,pWnd->m_InfoClient,m_SipMsg.msg,1))
 		{
 			AfxMessageBox("KeepAlive From or To variable is error",MB_OK|MB_ICONERROR);
@@ -1186,10 +1189,9 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			return 0;
 		}
 	}
-	else if ( strcmp(m_SipMsg.msg->call_id->host,pWnd->NodeTypeCallID.Host)==0 && 
-		strcmp(m_SipMsg.msg->call_id->number,pWnd->NodeTypeCallID.Num)==0 )
+//receive node message
+	else if (/*strcmp(m_SipMsg.msg->call_id->host,pWnd->NodeTypeCallID.Host)==0&&*/strcmp(m_SipMsg.msg->call_id->number,pWnd->NodeTypeCallID.Num)==0 )
 	{		
-		// receive node message
 		if ( !SipVerify(pWnd->m_InfoServer,pWnd->m_InfoClient,m_SipMsg.msg,1))
 		{
 			AfxMessageBox("Node Send From or To is error",MB_OK|MB_ICONERROR);
@@ -1221,14 +1223,19 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 	}
 	else
 	{
-		if (Alarmtemp==NULL)
+		if (Common::nowReservingEventMsg_ArarmCallID == NULL)
 		{
-			Alarmtemp=new char[100];
-			strcpy(Alarmtemp,m_SipMsg.msg->call_id->number);
-			strcat(Alarmtemp,"@");
-			strcat(Alarmtemp,m_SipMsg.msg->call_id->host);
+			Common::nowReservingEventMsg_ArarmCallID = new char[100];
+			strcpy(Common::nowReservingEventMsg_ArarmCallID,m_SipMsg.msg->call_id->number);
+			strcat(Common::nowReservingEventMsg_ArarmCallID,"@");
+			//strcat(Common::nowReservingEventMsg_ArarmCallID,m_SipMsg.msg->call_id->host);
 		}
-		if (strcmp(Alarmtemp,pWnd->AlarmCallID)==0)
+		string Alarmtemp = Common::nowReservingEventMsg_ArarmCallID;
+		vector<string>::iterator it = find(pWnd->AlarmCallID.begin(), pWnd->AlarmCallID.end(),
+			Alarmtemp);
+
+		//if (strcmp(Alarmtemp,pWnd->AlarmCallID)==0)
+		if(it != pWnd->AlarmCallID.end())//表示存在这样的预警Call_ID，那么就取消这样的ID
 		{
 			if ( m_SipMsg.msg->status_code==200 )
 			{
@@ -1291,12 +1298,12 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			}		
 		}
 	}
-	switch ( m_Type )
+	switch (m_Type)
 	{
-	case Register:
+	case Register://注册
 		{	
 			cseq=m_SipMsg.msg->cseq;
-			if ( m_SipMsg.msg->status_code==200 )
+			if ( m_SipMsg.msg->status_code==200)
 			{
 				pWnd->ShowRecvData("\t\t-----注册成功-----\r\n");
 				pWnd->ShowTestLogData += "<------------ 200 OK\r\n";
@@ -1384,7 +1391,6 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 				index1=strbuf.find('"',index);
 				index2=strbuf.find('"',index1+1);
 				g_authInfo.opaque=strbuf.substr(index1+1,index2-index1-1);
-
 // 				index=strbuf.find("qop");
 // 				if (index==string::npos)
 // 				{
@@ -1394,7 +1400,6 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 // 				index1=strbuf.find('"',index);
 // 				index2=strbuf.find('"',index1+1);
 // 				g_authInfo.qop=strbuf.substr(index1+1,index2-index1-1);
-
 				char *data=new char[MAXBUFSIZE];
 				memset(data,0,MAXBUFSIZE);
 				SipRegisterWithAuthCreate(&data,pWnd->m_InfoServer,pWnd->m_InfoClient,m_SipMsg.msg);
@@ -1416,7 +1421,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			}
 		}
 		break;
-	case NodeType:
+	case NodeType://设备目录信息等
 		{
 			if (m_SipMsg.msg->status_code==200)
 			{
@@ -1651,7 +1656,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			pWnd->ShowTestLogData+="200 OK ----------->\r\n";
 		}
 		break;
-	case CatalogQuery:
+	case CatalogQuery://目录节点查询
 		{
 			string st=buffer;
 			int index = st.find("<Address>",0);
@@ -1719,7 +1724,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			pWnd->ShowTestLogData+="200 OK ----------->\r\n";
 		}
 		break;
-	case DeviceInfQuery:
+	case DeviceInfQuery://设备信息查询
 		{
 			char *xml=new char[XMLSIZE];			
 			CreateXMLDeviceInfQuery(&xml);
@@ -1738,7 +1743,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			pWnd->ShowTestLogData+="200 OK ----------->\r\n";
 		}
 		break;
-	case FlowQuery:
+	case FlowQuery://流量查询
 		{
 			char *xml=new char[XMLSIZE];			
 			CreateXMLFlowQuery(&xml);
@@ -1787,7 +1792,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			pWnd->ShowTestLogData+="200 OK --------->\r\n";
 		}
 		break;
-	case EncoderSet:
+	case EncoderSet://编码设置
 		{
 			char *dst=new char[XMLSIZE];
 			char *dstEncoderSetMsg=new char[MAXBUFSIZE];
@@ -1870,7 +1875,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			pWnd->ShowTestLogData+="200  OK ------->\r\n";	
 		}
 		break;
-	case Alarm:
+	case Alarm://UAS的报警预定返回消息
 		{
 			//analyse XML message
 			osip_body_t *XMLbody;
@@ -1881,56 +1886,68 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			osip_body_free(XMLbody);
 			char *dst=new char[XMLSIZE];
 			char *dstAlarmMsg=new char[MAXBUFSIZE];
-			if( XmlAlarmCreate(&dst,XmlMessage) )
+			if( XmlAlarmCreate(&dst,XmlMessage))//开始返回消息
 			{
 				Sip200Xml(&dstAlarmMsg,m_SipMsg.msg,dst);
-				//pWnd->SendData(dstAlarmMsg);	
 				UA_Msg uac_sendtemp;
 				strcpy(uac_sendtemp.data,dstAlarmMsg);
 				EnterCriticalSection(&g_uac);
 				uac_sendqueue.push(uac_sendtemp);
 				LeaveCriticalSection(&g_uac);
-				//pWnd->ShowSendData(dstAlarmMsg);
 				delete dst;		
 				delete dstAlarmMsg;				
-				//update log
-				pWnd->ShowTestLogData+="200  OK ---------->\r\n";					
-				if ( strcmp(m_SipMsg.msg->call_id->host,"")==0 )
-				{	
-					
-					strcpy(pWnd->AlarmCallID,m_SipMsg.msg->call_id->number);
-				}
-				else
+				pWnd->ShowTestLogData+="200  OK ---------->\r\n";	
+
+				//判断当前的(pWnd->AlarmCallID)中是否存在需要预定或者取消的预警Call_ID
+				vector<string>::iterator it = find(pWnd->AlarmCallID.begin(), pWnd->AlarmCallID.end(),
+					m_SipMsg.msg->call_id->number);
+				if (it != pWnd->AlarmCallID.end())//表示存在这样的预警Call_ID，那么就取消这样的ID
+												  //表示取消这样的预警事件，返回成功
 				{
-					char *dest=NULL;
-					osip_call_id_to_str(m_SipMsg.msg->call_id,&dest);
-					strcpy(pWnd->AlarmCallID,dest);
-					osip_free(dest);
-				}				
-				//sleep time				
-				char *alarmnotify=new char[MAXBUFSIZE];
-				SipAlarmSubscribeNotify(&alarmnotify,pWnd->m_InfoServer,pWnd->m_InfoClient,m_SipMsg.msg);
-				//pWnd->SendData(alarmnotify);	
-				UA_Msg uac_sendtemp1;
-				strcpy(uac_sendtemp1.data,alarmnotify);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp1);
-				LeaveCriticalSection(&g_uac);
-				//pWnd->ShowSendData(alarmnotify);
-				delete alarmnotify;	
-				pWnd->balarmsubscribe=FALSE;
-				pWnd->ShowTestLogData+="NOTIFY ---------->\r\n";					
+					CString CALLID = m_SipMsg.msg->call_id->number;
+					pWnd->ShowTestLogData += "成功取消CallID为"+ CALLID +"的报警事件" + "---------->\r\n";
+					//从pWnd->AlarmCallID中删除这个CALLID
+					pWnd->AlarmCallID.erase(it);
+					//pop XmlAlarmCreate中存储的m_InfoAlarm
+					pWnd->m_InfoAlarm.pop_back();
+					//在删除CALLID为m_SipMsg.msg->call_id->number的m_InfoAlarm
+					for (vector<InfoAlarm>::iterator iter_Info = pWnd->m_InfoAlarm.begin();
+						iter_Info != pWnd->m_InfoAlarm.end(); iter_Info++)
+					{
+
+					}
+
+					return 0;
+				}
+				else//否则的话是进行报警事件预定，并且储存对应的CALLID
+				{
+					//进行CALLID的存储
+					pWnd->AlarmCallID.push_back(m_SipMsg.msg->call_id->number);
+					int count = pWnd->m_InfoAlarm.size();
+					pWnd->m_InfoAlarm[count].CallID = m_SipMsg.msg->call_id->number;
+
+					//sleep time				
+					char *alarmnotify = new char[MAXBUFSIZE];
+					//200 OK之后的NOTIFY消息 UAC -> UAS
+					SipAlarmSubscribeNotify(&alarmnotify, pWnd->m_InfoServer, pWnd->m_InfoClient, m_SipMsg.msg);
+					UA_Msg uac_sendtemp1;
+					strcpy(uac_sendtemp1.data, alarmnotify);
+					EnterCriticalSection(&g_uac);
+					uac_sendqueue.push(uac_sendtemp1);
+					LeaveCriticalSection(&g_uac);
+					delete alarmnotify;
+					pWnd->balarmsubscribe = FALSE;
+					pWnd->ShowTestLogData += "NOTIFY ---------->\r\n";
+				}
 			}
-			else
+			else//XML没有准备好，返回400 
 			{
 				Sip400(&dstAlarmMsg,m_SipMsg.msg);
-				//pWnd->SendData(dstAlarmMsg);	
 				UA_Msg uac_sendtemp;
 				strcpy(uac_sendtemp.data,dstAlarmMsg);
 				EnterCriticalSection(&g_uac);
 				uac_sendqueue.push(uac_sendtemp);
 				LeaveCriticalSection(&g_uac);
-				//pWnd->ShowSendData(dstAlarmMsg);
 				delete dst;		
 				delete dstAlarmMsg;
 				//update log
@@ -2252,7 +2269,7 @@ void CSipMsgProcess::DOKeepAliveMsg(char **dst,InfoServer m_InfoServer,InfoClien
 	//osip_via_set_branch(SipHeader->m_SipMsg.via,"z9hG4bK--22bd9222");//随机数
 	osip_via_set_host(SipHeader->m_SipMsg.via,srcIP);
 
-	osip_call_id_set_host(SipHeader->m_SipMsg.callid,srcIP);
+	//osip_call_id_set_host(SipHeader->m_SipMsg.callid, srcIP);
 	osip_call_id_set_number(SipHeader->m_SipMsg.callid,CallID);//随机数
 
 	//osip_from_set_displayname(SipHeader->m_SipMsg.from,srcUserName);
@@ -2444,15 +2461,12 @@ void CSipMsgProcess::Sip200Xml(char **dstBuf,osip_message_t *srcmsg,CString Xml)
 	osip_message_set_status_code(Sip200->m_SipMsg.msg,200);
 	osip_message_set_reason_phrase(Sip200->m_SipMsg.msg,"OK");
 	//osip_call_id_clone(srcmsg->call_id,&Sip200->m_SipMsg.msg->call_id);
-	if ( strcmp(srcmsg->call_id->host,"")==0 )
-	{	
-		osip_call_id_set_number(Sip200->m_SipMsg.callid,srcmsg->call_id->number);
-		osip_call_id_to_str(Sip200->m_SipMsg.callid,&dest);
-		osip_message_set_call_id(Sip200->m_SipMsg.msg,dest);
-		osip_free(dest);
-	}
-	else
-		osip_call_id_clone(srcmsg->call_id,&Sip200->m_SipMsg.msg->call_id);
+	osip_call_id_set_number(Sip200->m_SipMsg.callid,srcmsg->call_id->number);
+	osip_call_id_to_str(Sip200->m_SipMsg.callid,&dest);
+	osip_message_set_call_id(Sip200->m_SipMsg.msg,dest);
+	osip_free(dest);
+
+	osip_call_id_clone(srcmsg->call_id,&Sip200->m_SipMsg.msg->call_id);
 	osip_from_clone(srcmsg->from,&Sip200->m_SipMsg.msg->from);
 	osip_to_clone(srcmsg->to,&Sip200->m_SipMsg.msg->to);
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
@@ -2740,14 +2754,19 @@ void CSipMsgProcess::SipAlarmSubscribeNotify(char **dst,InfoServer m_InfoServer,
 	osip_via_set_version(SipHeader->m_SipMsg.via,"2.0");
 	osip_via_set_protocol(SipHeader->m_SipMsg.via,"UDP");
 	osip_via_set_port(SipHeader->m_SipMsg.via,srcPort);
-	//osip_via_set_branch(SipHeader->m_SipMsg.via,"z9hG4bK-94a5dd17bfa14a949e9fb8d58cbc78be");//随机数	
 // 	RandData=rand();	
 // 	char sdtr[10];	
 // 	char branch[20];
 // 	itoa(RandData,sdtr,16);
 // 	strcpy(branch,"z9hG4bK--");
 // 	strcat(branch,sdtr);
-// 	osip_via_set_branch(SipHeader->m_SipMsg.via,branch);//随机数
+	char branch[20] = "z9hG4bK";
+	for (int i = 0; i < 8; i++)
+	{
+		RandData = rand() % 10;
+		branch[i + 7] = RandData + '0';
+	}
+ 	osip_via_set_branch(SipHeader->m_SipMsg.via,branch);//随机数
 	osip_via_set_host(SipHeader->m_SipMsg.via,srcIP);	
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
 	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);	
@@ -2757,15 +2776,14 @@ void CSipMsgProcess::SipAlarmSubscribeNotify(char **dst,InfoServer m_InfoServer,
 	osip_from_set_url(SipHeader->m_SipMsg.from,SipHeader->m_SipMsg.uriClient);
 	if (srcmsg->to->gen_params.nb_elt==0 )
 	{
-		//osip_to_set_tag(SipHeader->m_SipMsg.msg->from,FromTag);
 		osip_from_set_tag(SipHeader->m_SipMsg.from,pWnd->alarmTag);
+		//osip_to_set_tag(SipHeader->m_SipMsg.msg->from,FromTag);
 	}	
 	osip_to_set_displayname(SipHeader->m_SipMsg.to,dstUserName);	
 	osip_to_set_url(SipHeader->m_SipMsg.to,SipHeader->m_SipMsg.uriServer);		
 	//osip_from_set_displayname(SipHeader->m_SipMsg.from,srcUserName);
 	//osip_from_set_tag(SipHeader->m_SipMsg.from,FromTag);//随机数
 	//osip_from_set_url(SipHeader->m_SipMsg.from,SipHeader->m_SipMsg.uriClient);	
-
 	//osip_to_set_displayname(SipHeader->m_SipMsg.to,dstUserName);	
 	//osip_to_set_url(SipHeader->m_SipMsg.to,SipHeader->m_SipMsg.uriServer);
 
@@ -2790,14 +2808,14 @@ void CSipMsgProcess::SipAlarmSubscribeNotify(char **dst,InfoServer m_InfoServer,
 	osip_message_set_to(SipHeader->m_SipMsg.msg,dest);
 	osip_free(dest);	
 	//there call id is alarm subscribe call id
-	if ( strcmp(srcmsg->call_id->host,"")==0 )
-	{	
+	//if ( strcmp(srcmsg->call_id->host,"")==0 )
+	//{	
 		osip_call_id_set_number(SipHeader->m_SipMsg.callid,srcmsg->call_id->number);
 		osip_call_id_to_str(SipHeader->m_SipMsg.callid,&dest);
 		osip_message_set_call_id(SipHeader->m_SipMsg.msg,dest);
 		osip_free(dest);
-	}
-	else
+	//}
+	//else
 		osip_call_id_clone(srcmsg->call_id,&SipHeader->m_SipMsg.msg->call_id);
 	//osip_message_set_call_id(SipHeader->m_SipMsg.msg,pWnd->AlarmCallID);
 
@@ -2875,13 +2893,14 @@ BOOL CSipMsgProcess::XmlAlarmCreate(char** strAlarmXml,char *srcXml)
 		AfxMessageBox("报警，缺Privilege字段");
 		return FALSE;
 	}	
-	pWnd->m_InfoAlarm.UserCode=strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11);
+	InfoAlarm infoAlarm;
+	infoAlarm.UserCode = strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11);
 	
-// 	if( (VariableStart=strTemp.find("<Level>",0)) ==string::npos)			
-// 		return FALSE;						
-// 	if ( (VariableEnd=strTemp.find("</Level>",VariableStart+1)) ==string::npos)		
-// 		return FALSE;
-// 	pWnd->m_InfoAlarm.Level=strTemp.substr(VariableStart+7,VariableEnd-VariableStart-7);
+ 	if( (VariableStart=strTemp.find("<Level>",0)) ==string::npos)			
+ 		return FALSE;	
+ 	if ( (VariableEnd=strTemp.find("</Level>",VariableStart+1)) ==string::npos)		
+ 		return FALSE;
+ 	infoAlarm.Level = strTemp.substr(VariableStart+7,VariableEnd-VariableStart-7);
 	
 	if( (VariableStart=strTemp.find("<AlarmType>",0)) ==string::npos)			
 	{
@@ -2893,32 +2912,36 @@ BOOL CSipMsgProcess::XmlAlarmCreate(char** strAlarmXml,char *srcXml)
 		AfxMessageBox("报警，缺AlarmType字段");
 		return FALSE;
 	}
-	pWnd->m_InfoAlarm.AlarmType=strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11);
+	infoAlarm.AlarmType=strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11);
 	
 	if( (VariableStart=strTemp.find("<Address>",0)) ==string::npos)			
 	{
 		AfxMessageBox("报警，缺Address字段");
 		return FALSE;
 	}					
+	
 	if ( (VariableEnd=strTemp.find("</Address>",VariableStart+1)) ==string::npos)		
 	{
 		AfxMessageBox("报警，缺Address字段");
 		return FALSE;
 	}
-	pWnd->m_InfoAlarm.Address=strTemp.substr(VariableStart+9,VariableEnd-VariableStart-9);
+	infoAlarm.Address = strTemp.substr(VariableStart+9,VariableEnd-VariableStart-9);
 	
-// 	if( (VariableStart=strTemp.find("<AcceptIp>",0)) ==string::npos)			
-// 		return FALSE;						
-// 	if ( (VariableEnd=strTemp.find("</AcceptIp>",VariableStart+1)) ==string::npos)		
-// 		return FALSE;
-// 	pWnd->m_InfoAlarm.AcceptIP=strTemp.substr(VariableStart+10,VariableEnd-VariableStart-10);
-// 	
-// 	if( (VariableStart=strTemp.find("<AcceptPort>",0)) ==string::npos)			
-// 		return FALSE;						
-// 	if ( (VariableEnd=strTemp.find("</AcceptPort>",VariableStart+1)) ==string::npos)		
-// 		return FALSE;
-// 	pWnd->m_InfoAlarm.AcceptPort=strTemp.substr(VariableStart+12,VariableEnd-VariableStart-12);
+ 	if( (VariableStart=strTemp.find("<AcceptIp>",0)) ==string::npos)			
+ 		return FALSE;						
+ 	if ( (VariableEnd=strTemp.find("</AcceptIp>",VariableStart+1)) ==string::npos)		
+ 		return FALSE;
+ 	infoAlarm.AcceptIP = strTemp.substr(VariableStart+10,VariableEnd-VariableStart-10);
+ 	
+ 	if( (VariableStart=strTemp.find("<AcceptPort>",0)) ==string::npos)			
+ 		return FALSE;						
+ 	if ( (VariableEnd=strTemp.find("</AcceptPort>",VariableStart+1)) ==string::npos)		
+ 		return FALSE;
+ 	infoAlarm.AcceptPort=strTemp.substr(VariableStart+12,VariableEnd-VariableStart-12);
 	
+	//储存到vector m_InfoAlarm中
+	pWnd->m_InfoAlarm.push_back(infoAlarm);
+
 	string XmlAlarmSet;
 	XmlAlarmSet="<?xml version=\"1.0\"?>\r\n";
 	XmlAlarmSet+="<Response>\r\n";
@@ -2981,7 +3004,7 @@ void CSipMsgProcess::SipXmlMsg(char **dst,InfoServer m_InfoServer,InfoClient m_I
 	//osip_via_set_branch(SipHeader->m_SipMsg.via,"z9hG4bK--22bd9222");//随机数
 	osip_via_set_host(SipHeader->m_SipMsg.via,srcIP);
 
-	osip_call_id_set_host(SipHeader->m_SipMsg.callid,srcIP);
+	//osip_call_id_set_host(SipHeader->m_SipMsg.callid, srcIP);
 	osip_call_id_set_number(SipHeader->m_SipMsg.callid,CallID);//随机数
 
 	//osip_from_set_displayname(SipHeader->m_SipMsg.from,srcUserName);
@@ -3092,15 +3115,14 @@ void CSipMsgProcess::SipAlarmNotifyXmlMsg(char **dst,InfoServer m_InfoServer,Inf
 	osip_via_set_version(SipHeader->m_SipMsg.via,"2.0");
 	osip_via_set_protocol(SipHeader->m_SipMsg.via,"UDP");
 	osip_via_set_port(SipHeader->m_SipMsg.via,srcPort);
-	//osip_via_set_branch(via,"123456789");//随机数
-	//osip_via_set_branch(SipHeader->m_SipMsg.via,"z9hG4bK--22cd7222");//随机数
-// 	RandData=rand();	
-// 	char sdtr[8];	
-// 	char branch[20];
-// 	itoa(RandData,sdtr,16);	
-// 	strcpy(branch,"z9hG4bK-");
-// 	strcat(branch,sdtr);
-// 	osip_via_set_branch(SipHeader->m_SipMsg.via,branch);//随机数
+
+	char branch[20] = "z9hG4bK";
+	for (int i = 0; i < 8; i++)
+	{
+		RandData = rand() % 10;
+		branch[i + 7] = RandData + '0';
+	}
+	osip_via_set_branch(SipHeader->m_SipMsg.via, branch);//随机数
 	osip_via_set_host(SipHeader->m_SipMsg.via,srcIP);
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
 	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
@@ -3125,7 +3147,8 @@ void CSipMsgProcess::SipAlarmNotifyXmlMsg(char **dst,InfoServer m_InfoServer,Inf
 	osip_message_set_to(SipHeader->m_SipMsg.msg,dest);
 	osip_free(dest);
 	// there call id is alarm subscribe call id	
-	osip_message_set_call_id(SipHeader->m_SipMsg.msg,pWnd->AlarmCallID);	
+	//osip_message_set_call_id(SipHeader->m_SipMsg.msg, pWnd->AlarmCallID);	
+	osip_message_set_call_id(SipHeader->m_SipMsg.msg, Common::nowReservingEventMsg_ArarmCallID);
 
 	osip_from_to_str(SipHeader->m_SipMsg.from,&dest);
 	osip_message_set_from(SipHeader->m_SipMsg.msg,dest);
@@ -3415,37 +3438,34 @@ BOOL CSipMsgProcess::RegisterSipVerify(InfoServer m_InfoServer,InfoClient m_Info
 	{
 		srcMsg->to->url->port="";
 	}
-	if ( nto==1 )
+	switch (nto)
 	{
-		//strcmp(srcUserName,srcMsg->from->displayname)==0 &&
-		//strcmp(dstUserName,srcMsg->to->displayname)==0 &&
-		if ( strcmp(srcCode,srcMsg->from->url->username)==0 &&			
-			strcmp(srcIP,srcMsg->from->url->host)==0 &&
-			strcmp(srcPort,srcMsg->from->url->port)==0 &&
-			strcmp(srcCode,srcMsg->to->url->username)==0 &&			
-			strcmp(srcIP,srcMsg->to->url->host)==0 &&
-			strcmp(srcPort,srcMsg->to->url->port)==0 )
-		{
-			return TRUE;
-		}
-	}
-	else if ( nto==0 )
-	{
+	case 0://验证InfoServer
 		//strcmp(dstUserName,srcMsg->from->displayname)==0 &&
 		//strcmp(srcUserName,srcMsg->to->displayname)==0 &&
-		if ( strcmp(dstCode,srcMsg->from->url->username)==0 && 			
-			strcmp(dstIP,srcMsg->from->url->host)==0 &&
-			strcmp(dstPort,srcMsg->from->url->port)==0 &&
-			strcmp(srcCode,srcMsg->to->url->username)==0 && 			
-			strcmp(srcIP,srcMsg->to->url->host)==0 &&
-			strcmp(srcPort,srcMsg->to->url->port)==0 )
+		if (strcmp(dstCode, srcMsg->from->url->username) == 0 &&
+			strcmp(dstIP, srcMsg->from->url->host) == 0 &&
+			strcmp(dstPort, srcMsg->from->url->port) == 0 &&
+			strcmp(srcCode, srcMsg->to->url->username) == 0 &&
+			strcmp(srcIP, srcMsg->to->url->host) == 0 &&
+			strcmp(srcPort, srcMsg->to->url->port) == 0)
 		{
 			return TRUE;
 		}
-	}
-	else
-	{
-		return TRUE;
+		break;
+	case 1://验证InfoClient
+		//strcmp(srcUserName,srcMsg->from->displayname)==0 &&
+		//strcmp(dstUserName,srcMsg->to->displayname)==0 &&
+		if (strcmp(srcCode, srcMsg->from->url->username) == 0 &&
+			strcmp(srcIP, srcMsg->from->url->host) == 0 &&
+			strcmp(srcPort, srcMsg->from->url->port) == 0 &&
+			strcmp(srcCode, srcMsg->to->url->username) == 0 &&
+			strcmp(srcIP, srcMsg->to->url->host) == 0 &&
+			strcmp(srcPort, srcMsg->to->url->port) == 0)
+		{
+			return TRUE;
+		}
+		break;
 	}
 	return FALSE;	
 }
@@ -3761,17 +3781,17 @@ int CSipMsgProcess::CreateXMLDeviceInfQuery(char **dstXML)
 int CSipMsgProcess::CreateXMLFlowQuery(char **dstXML)
 {
 	CString strTemp;
-	strTemp="<?xml version=\"1.0\"?>\r\n";
-	strTemp+="<Response>\r\n";
-	strTemp+="<QueryResponse>\r\n";
-	strTemp+="<Variable>BandWidth</Variable>\r\n";
-	strTemp+="<Result>0</Result>\r\n";	
-	strTemp+="<Manufacturer>uniview</Manufacturer>\r\n";
-	strTemp+="<All>256</All>\r\n";
-	strTemp+="<Free>240</Free>\r\n";
-	strTemp+="<MediaLink>16</MediaLink>\r\n";
-	strTemp+="</QueryResponse>\r\n";
-	strTemp+="</Response>\r\n";
+	strTemp = "<?xml version=\"1.0\"?>\r\n";
+	strTemp += "<Response>\r\n";
+	strTemp += "<QueryResponse>\r\n";
+	strTemp += "<Variable>BandWidth</Variable>\r\n";
+	strTemp += "<Result>0</Result>\r\n";	
+	strTemp += "<Manufacturer>uniview</Manufacturer>\r\n";
+	strTemp += "<All>256</All>\r\n";
+	strTemp += "<Free>240</Free>\r\n";
+	strTemp += "<MediaLink>16</MediaLink>\r\n";
+	strTemp += "</QueryResponse>\r\n";
+	strTemp += "</Response>\r\n";
 
 	char *dst=(LPSTR)(LPCTSTR)strTemp;	
 	strcpy(*dstXML,dst);

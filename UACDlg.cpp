@@ -183,6 +183,7 @@ BOOL CUACDlg::OnInitDialog()
 	uac_msg_log.open("uac_msg.log");
 	InitProgram();
 	InitNetSet();
+	InitAlarm();
 	InitEnableWindow();
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -608,6 +609,17 @@ void CUACDlg::InitNetSet()
 	m_Invite.GetDlgItem(IDC_PRIVILEGE)->SetWindowText("%00%08");
 
 	bNetSet=TRUE;
+}
+
+void CUACDlg::InitAlarm()
+{
+	m_Alarm.GetDlgItem(IDC_EDIT_ADDRESS)->SetWindowText("252000001199000001");
+	m_Alarm.GetDlgItem(IDC_EDIT_PRIVILEGE)->SetWindowText("%00%00%02");
+	m_Alarm.GetDlgItem(IDC_EDIT_LEVEL)->SetWindowText("1");
+	m_Alarm.m_AlarmTypeSel.SetCurSel(0);
+	m_Alarm.GetDlgItem(IDC_ALARMTYPENUM)->SetWindowText("1");//表示高温报警
+	m_Alarm.GetDlgItem(IDC_EDIT_ACCEPTIP)->SetWindowText("192.168.1.7");
+	m_Alarm.GetDlgItem(IDC_EDIT_ACCEPTPORT)->SetWindowText("5060");
 }
 
 void CUACDlg::InitEnableWindow()
