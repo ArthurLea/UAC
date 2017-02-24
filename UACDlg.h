@@ -15,7 +15,7 @@
 #include "LOG.h"
 #include "SipMsgProcess.h"
 #include "MySocket.h"
-
+#include "PSTVSetTime.h"
 //自定义消息
 #define WM_RECVDATA    (WM_USER+115)
 #define  WM_SENDDATA  (WM_USER+116)
@@ -78,7 +78,10 @@ public:
 	InfoClient m_InfoClient;	
 	vector<InfoAlarm> m_InfoAlarm;
 	BOOL balarmsubscribe;
-	char alarmTag[50];	
+
+	char alarmToTag[50];
+	char alarmFromTag[50];
+
 	char invite100tag[50];
 	char *contact;
 	char *byestring;
@@ -115,6 +118,7 @@ public:
 	CVideoPlay m_VideoPlay;
 	CCoderSet m_CoderSet;
 	CAlarm m_Alarm;
+	CPSTVSetTime m_PSTVSetTime;
 	// 厂商列表显示
 	CComboBox m_TestMember;
 	afx_msg void OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult);

@@ -5,6 +5,7 @@
 #include "UAC.h"
 #include "Alarm.h"
 #include "UACDlg.h"
+#include "Common.h"
 extern queue<UA_Msg> uac_sendqueue;
 extern CRITICAL_SECTION g_uac;
 
@@ -59,58 +60,13 @@ BOOL CAlarm::OnInitDialog()
 }
 
 BEGIN_MESSAGE_MAP(CAlarm, CDialog)
-	ON_BN_CLICKED(IDC_BTN_TIMESET, &CAlarm::OnBnClickedBtnTimeset)
 	ON_BN_CLICKED(IDC_BTN_ALARM_CANCEL, &CAlarm::OnBnClickedBtnAlarmCancel)
 	ON_BN_CLICKED(IDC_BTN_ALARM_NOTIFY3, &CAlarm::OnBnClickedBtnAlarmNotify3)
+	ON_CBN_SELCHANGE(IDC_COMBO_ALARMTYPENAME, &CAlarm::OnCbnSelchangeComboAlarmtypename)
 END_MESSAGE_MAP()
 
 
 // CAlarm message handlers
-
-void CAlarm::OnBnClickedBtnTimeset()
-{
-	// TODO: Add your control notification handler code here
-	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
-	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
-	//get information and create XML message	
-	string XmlTimeSet;
-	XmlTimeSet="<?xml version=\"1.0\"?>\r\n";
-	XmlTimeSet+="<Action>\r\n";
-	XmlTimeSet+="<Notify>\r\n";
-	XmlTimeSet+="<Variable>TimeGet</Variable>\r\n";	
-	XmlTimeSet+="<Privilege>0100100001</Privilege>\r\n";	
-	XmlTimeSet+="</Notify>\r\n";
-	XmlTimeSet+="</Action>\r\n";	
-	char *xml=new char[XMLSIZE];
-	memset(xml,0,XMLSIZE);
-	strcpy(xml,XmlTimeSet.c_str());
-	CSipMsgProcess *Sip=new CSipMsgProcess;
-	char *SipXml=new char[MAXBUFSIZE];
-	memset(SipXml,0,MAXBUFSIZE);
-	Sip->SipXmlMsg(&SipXml,pWnd->m_InfoServer,pWnd->m_InfoClient,xml);
-	//send message to client
-	if (pWnd->m_InfoServer.Port=="" || pWnd->m_InfoServer.IP=="")
-	{	
-		delete SipXml;
-		delete xml;
-		MessageBox("服务端IP和端口出错","UAC 出错",MB_OK|MB_ICONERROR);		
-		return;
-	}	
-	//pWnd->SendData(SipXmlAlarm);
-	UA_Msg uac_sendtemp;
-	strcpy(uac_sendtemp.data,SipXml);
-	EnterCriticalSection(&g_uac);
-	uac_sendqueue.push(uac_sendtemp);
-	LeaveCriticalSection(&g_uac);
-	//pWnd->ShowSendData(SipXmlAlarm);	
-	delete SipXml;
-	delete xml;
-	//update log
-	pWnd->ShowTestLogData="DO -------->\r\n";
-	pWnd->ShowTestLogTitle="Time Set Test";
-	pWnd->CurStatusID.nSataus=TimeGet;
-
-}
 
 void CAlarm::OnBnClickedBtnAlarmCancel()
 {
@@ -172,34 +128,53 @@ void CAlarm::OnBnClickedBtnAlarmCancel()
 	XmlAlarm += "</Notify>\r\n";
 	XmlAlarm += "</Action>\r\n";
 
-	char *xml=new char[XMLSIZE];
-	memset(xml,0,XMLSIZE);
-	strcpy(xml,XmlAlarm.c_str());
-	CSipMsgProcess *SipAlarm=new CSipMsgProcess;
-	char *SipXmlAlarm=new char[MAXBUFSIZE];
-	memset(SipXmlAlarm,0,MAXBUFSIZE);
-	SipAlarm->SipAlarmNotifyXmlMsg(&SipXmlAlarm,pWnd->m_InfoServer,pWnd->m_InfoClient,xml);
-	//send message to client
-	if (pWnd->m_InfoServer.Port=="" || pWnd->m_InfoServer.IP=="")
-	{	
+	//开始判断是否已经预定了这样的预警事件
+	BOOL Flag_IsExistTheEvent = false;
+	int count = pWnd->m_InfoAlarm.size();
+	for (int i = 0; i < count; i++)
+	{
+		if ((Address.Compare(pWnd->m_InfoAlarm[i].Address.c_str()) == 0)
+			&& (Level.Compare(pWnd->m_InfoAlarm[i].Level.c_str()) == 0)
+			&& (AlarmType.Compare(pWnd->m_InfoAlarm[i].AlarmType.c_str()) == 0))//表示存在这样的预定报警事件
+		{
+			Common::nowNotifyEvent_ArarmCallID = pWnd->m_InfoAlarm[i].CallID;
+			Flag_IsExistTheEvent = true;
+			break;
+		}
+	}
+	if (Flag_IsExistTheEvent)
+	{
+		char *xml = new char[XMLSIZE];
+		memset(xml, 0, XMLSIZE);
+		strcpy(xml, XmlAlarm.c_str());
+		CSipMsgProcess *SipAlarm = new CSipMsgProcess;
+		char *SipXmlAlarm = new char[MAXBUFSIZE];
+		memset(SipXmlAlarm, 0, MAXBUFSIZE);
+		SipAlarm->SipAlarmNotifyXmlMsg(&SipXmlAlarm, pWnd->m_InfoServer, pWnd->m_InfoClient, xml);
+		//send message to client
+		if (pWnd->m_InfoServer.Port == "" || pWnd->m_InfoServer.IP == "")
+		{
+			delete SipXmlAlarm;
+			delete xml;
+			MessageBox("服务端IP和端口出错", "UAC 出错", MB_OK | MB_ICONERROR);
+			return;
+		}
+		UA_Msg uac_sendtemp;
+		strcpy(uac_sendtemp.data, SipXmlAlarm);
+		EnterCriticalSection(&g_uac);
+		uac_sendqueue.push(uac_sendtemp);
+		LeaveCriticalSection(&g_uac);
 		delete SipXmlAlarm;
 		delete xml;
-		MessageBox("服务端IP和端口出错","UAC 出错",MB_OK|MB_ICONERROR);		
+		//update log
+		pWnd->ShowTestLogData = "NOTIFY -------->\r\n";
+		pWnd->ShowTestLogTitle = "AlarmNotify Send Test";
+		pWnd->CurStatusID.nSataus = Alarm;
+	}
+	else {
+		AfxMessageBox("UAC并没有预定此报警事件...", MB_OK | MB_ICONERROR);
 		return;
-	}	
-	//pWnd->SendData(SipXmlAlarm);
-	UA_Msg uac_sendtemp;
-	strcpy(uac_sendtemp.data,SipXmlAlarm);
-	EnterCriticalSection(&g_uac);
-	uac_sendqueue.push(uac_sendtemp);
-	LeaveCriticalSection(&g_uac);
-	//pWnd->ShowSendData(SipXmlAlarm);	
-	delete SipXmlAlarm;
-	delete xml;
-	//update log
-	pWnd->ShowTestLogData="NOTIFY -------->\r\n";
-	pWnd->ShowTestLogTitle="AlarmNotify Send Test";
-	pWnd->CurStatusID.nSataus=Alarm;
+	}
 }
 
 void CAlarm::OnBnClickedBtnAlarmNotify3()
@@ -262,31 +237,60 @@ void CAlarm::OnBnClickedBtnAlarmNotify3()
 	//XmlAlarm += "<AcceptPort>" + AcceptPort + "</AcceptPort>\r\n";
 	XmlAlarm += "</Notify>\r\n";
 	XmlAlarm += "</Action>\r\n";
-
-	char *xml = new char[XMLSIZE];
-	memset(xml, 0, XMLSIZE);
-	strcpy(xml, XmlAlarm.c_str());
-	CSipMsgProcess *SipAlarm = new CSipMsgProcess;
-	char *SipXmlAlarm = new char[MAXBUFSIZE];
-	memset(SipXmlAlarm, 0, MAXBUFSIZE);
-	SipAlarm->SipAlarmNotifyXmlMsg(&SipXmlAlarm, pWnd->m_InfoServer, pWnd->m_InfoClient, xml);
-	//send message to client
-	if (pWnd->m_InfoServer.Port == "" || pWnd->m_InfoServer.IP == "")
+	
+	//开始判断是否已经预定了这样的预警事件
+	BOOL Flag_IsExistTheEvent = false;
+	int count = pWnd->m_InfoAlarm.size();
+	for (int i = 0; i < count; i++)
 	{
+		if ((Address.Compare(pWnd->m_InfoAlarm[i].Address.c_str()) == 0)
+			&& (Level.Compare(pWnd->m_InfoAlarm[i].Level.c_str()) == 0)
+			&& (AlarmType.Compare(pWnd->m_InfoAlarm[i].AlarmType.c_str())==0))//表示存在这样的预定报警事件
+		{
+			Common::nowNotifyEvent_ArarmCallID = pWnd->m_InfoAlarm[i].CallID;
+			Flag_IsExistTheEvent = true;
+			break;
+		}
+	}
+	if (Flag_IsExistTheEvent)
+	{
+		char *xml = new char[XMLSIZE];
+		memset(xml, 0, XMLSIZE);
+		strcpy(xml, XmlAlarm.c_str());
+		CSipMsgProcess *SipAlarm = new CSipMsgProcess;
+		char *SipXmlAlarm = new char[MAXBUFSIZE];
+		memset(SipXmlAlarm, 0, MAXBUFSIZE);
+		SipAlarm->SipAlarmNotifyXmlMsg(&SipXmlAlarm, pWnd->m_InfoServer, pWnd->m_InfoClient, xml);
+		//send message to client
+		if (pWnd->m_InfoServer.Port == "" || pWnd->m_InfoServer.IP == "")
+		{
+			delete SipXmlAlarm;
+			delete xml;
+			MessageBox("服务端IP和端口出错", "UAC 出错", MB_OK | MB_ICONERROR);
+			return;
+		}
+		UA_Msg uac_sendtemp;
+		strcpy(uac_sendtemp.data, SipXmlAlarm);
+		EnterCriticalSection(&g_uac);
+		uac_sendqueue.push(uac_sendtemp);
+		LeaveCriticalSection(&g_uac);
 		delete SipXmlAlarm;
 		delete xml;
-		MessageBox("服务端IP和端口出错", "UAC 出错", MB_OK | MB_ICONERROR);
+		//update log
+		pWnd->ShowTestLogData = "NOTIFY -------->\r\n";
+		pWnd->ShowTestLogTitle = "AlarmNotify Send Test";
+		pWnd->CurStatusID.nSataus = Alarm;
+	}
+	else {
+		AfxMessageBox("UAS并没有预定此报警事件...", MB_OK | MB_ICONERROR);
 		return;
 	}
-	UA_Msg uac_sendtemp;
-	strcpy(uac_sendtemp.data, SipXmlAlarm);
-	EnterCriticalSection(&g_uac);
-	uac_sendqueue.push(uac_sendtemp);
-	LeaveCriticalSection(&g_uac);
-	delete SipXmlAlarm;
-	delete xml;
-	//update log
-	pWnd->ShowTestLogData = "NOTIFY -------->\r\n";
-	pWnd->ShowTestLogTitle = "AlarmNotify Send Test";
-	pWnd->CurStatusID.nSataus = Alarm;
+	
+}
+
+void CAlarm::OnCbnSelchangeComboAlarmtypename()
+{
+	int index = m_AlarmTypeSel.GetCurSel();
+	CString alarmTypeNum = arrAlarmType[index];
+	GetDlgItem(IDC_ALARMTYPENUM)->SetWindowTextA(alarmTypeNum);
 }

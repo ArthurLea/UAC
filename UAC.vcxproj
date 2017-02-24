@@ -141,6 +141,7 @@
     <ClCompile Include="md5.c" />
     <ClCompile Include="MySocket.cpp" />
     <ClCompile Include="NetSet.cpp" />
+    <ClCompile Include="PSTVSetTime.cpp" />
     <ClCompile Include="PTZ.cpp" />
     <ClCompile Include="SetTestMember.cpp" />
     <ClCompile Include="SipMsgProcess.cpp" />
@@ -163,6 +164,7 @@
     <ClInclude Include="md5.h" />
     <ClInclude Include="MySocket.h" />
     <ClInclude Include="NetSet.h" />
+    <ClInclude Include="PSTVSetTime.h" />
     <ClInclude Include="PTZ.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SetTestMember.h" />

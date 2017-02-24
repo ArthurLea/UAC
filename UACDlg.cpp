@@ -314,7 +314,8 @@ void CUACDlg::InitProgram()
 	m_Ctab.InsertItem(3,_T("视频查询"));
 	m_Ctab.InsertItem(4,_T("视频回放"));
 	m_Ctab.InsertItem(5,_T("报警测试"));
-	m_Ctab.InsertItem(6,_T("编码器设置"));
+	m_Ctab.InsertItem(6,_T("编码器设置")); 
+	m_Ctab.InsertItem(7,_T("时间主动校对")); 
 	//为标签页添加初始化对话框
 	m_NetSet.Create(IDD_DLG_NETSET,GetDlgItem(IDC_TAB));
 	m_Invite.Create(IDD_DLG_INVITE,GetDlgItem(IDC_TAB));
@@ -323,6 +324,7 @@ void CUACDlg::InitProgram()
 	m_VideoPlay.Create(IDD_DLG_VIDEOPLAY,GetDlgItem(IDC_TAB));
 	m_CoderSet.Create(IDD_DLG_CODER_SET,GetDlgItem(IDC_TAB));
 	m_Alarm.Create(IDD_DLG_ALARM,GetDlgItem(IDC_TAB));
+	m_PSTVSetTime.Create(IDD_DLG_PSTVTIME,GetDlgItem(IDC_TAB));
 	//获得IDC_TAB客户区大小
 	CRect rect;
 	m_Ctab.GetClientRect(&rect);	
@@ -339,6 +341,7 @@ void CUACDlg::InitProgram()
 	m_VideoPlay.MoveWindow(&rect);
 	m_CoderSet.MoveWindow(&rect);
 	m_Alarm.MoveWindow(&rect);
+	m_PSTVSetTime.MoveWindow(&rect);
 	//分别设置隐藏和显示
 	m_NetSet.ShowWindow(true);
 	//设置默认的选项卡
@@ -363,7 +366,8 @@ void CUACDlg::InitProgram()
 	byestring=new char[MAXBUFSIZE];	
 	balarmsubscribe=FALSE;
 	memset(invite100tag,0,50);
-	memset(alarmTag,0,50);
+	memset(alarmFromTag, 0, 50);
+	memset(alarmToTag,0,50);
 	nKeepCseq=1;
 }
 
@@ -380,7 +384,8 @@ void CUACDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 		m_VideoQuery.ShowWindow(false);
 		m_VideoPlay.ShowWindow(false);
 		m_CoderSet.ShowWindow(false);	
-		m_Alarm.ShowWindow(false);
+		m_Alarm.ShowWindow(false); 	
+		m_PSTVSetTime.ShowWindow(false);
 		break;
 	case 1:		
 		m_NetSet.ShowWindow(false);
@@ -390,6 +395,7 @@ void CUACDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 		m_VideoPlay.ShowWindow(false);
 		m_CoderSet.ShowWindow(false);	
 		m_Alarm.ShowWindow(false);
+		m_PSTVSetTime.ShowWindow(false);
 		break;
 	case 2:	
 		m_NetSet.ShowWindow(false);
@@ -398,7 +404,8 @@ void CUACDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 		m_VideoQuery.ShowWindow(false);
 		m_VideoPlay.ShowWindow(false);
 		m_CoderSet.ShowWindow(false);	
-		m_Alarm.ShowWindow(false);	
+		m_Alarm.ShowWindow(false);
+		m_PSTVSetTime.ShowWindow(false);
 		break;
 	case 3:	
 		m_NetSet.ShowWindow(false);
@@ -408,6 +415,7 @@ void CUACDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 		m_VideoPlay.ShowWindow(false);
 		m_CoderSet.ShowWindow(false);	
 		m_Alarm.ShowWindow(false);
+		m_PSTVSetTime.ShowWindow(false);
 		break;
 	case 4:	
 		m_NetSet.ShowWindow(false);
@@ -416,7 +424,8 @@ void CUACDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 		m_VideoQuery.ShowWindow(false);
 		m_VideoPlay.ShowWindow(true);
 		m_CoderSet.ShowWindow(false);	
-		m_Alarm.ShowWindow(false);	
+		m_Alarm.ShowWindow(false);
+		m_PSTVSetTime.ShowWindow(false);
 		break;
 	case 5:	
 		m_NetSet.ShowWindow(false);
@@ -424,8 +433,9 @@ void CUACDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 		m_PTZ.ShowWindow(false);
 		m_VideoQuery.ShowWindow(false);
 		m_VideoPlay.ShowWindow(false);
-		m_CoderSet.ShowWindow(false);	
 		m_Alarm.ShowWindow(true);
+		m_CoderSet.ShowWindow(false);
+		m_PSTVSetTime.ShowWindow(false);
 		break;	
 	case 6:	
  		m_NetSet.ShowWindow(false);
@@ -433,9 +443,20 @@ void CUACDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
  		m_PTZ.ShowWindow(false);
  		m_VideoQuery.ShowWindow(false);
  		m_VideoPlay.ShowWindow(false);
- 		m_CoderSet.ShowWindow(true);	
  		m_Alarm.ShowWindow(false);
- 		break;	
+ 		m_CoderSet.ShowWindow(true);
+		m_PSTVSetTime.ShowWindow(false);
+ 		break;
+	case 7:
+		m_NetSet.ShowWindow(false);
+		m_Invite.ShowWindow(false);
+		m_PTZ.ShowWindow(false);
+		m_VideoQuery.ShowWindow(false);
+		m_VideoPlay.ShowWindow(false);
+		m_CoderSet.ShowWindow(false);
+		m_Alarm.ShowWindow(false);
+		m_PSTVSetTime.ShowWindow(true);
+		break;
 	default:
 		break;
 	} 
@@ -638,9 +659,10 @@ void CUACDlg::InitEnableWindow()
 	m_NetSet.GetDlgItem(IDC_EDT_SERVER_PORT)->EnableWindow(FALSE);
 	m_NetSet.GetDlgItem(IDC_EDT_SERVER_ADD)->EnableWindow(FALSE);
 	m_NetSet.GetDlgItem(IDC_EDT_SERVER_NAME)->EnableWindow(FALSE);
-    m_Alarm.GetDlgItem(IDC_BTN_ALARM_NOTIFY)->EnableWindow(FALSE);
+	m_Alarm.GetDlgItem(IDC_BTN_ALARM_NOTIFY)->EnableWindow(FALSE); 
+	m_Alarm.GetDlgItem(IDC_BTN_ALARM_CANCEL)->EnableWindow(FALSE); 
 	m_Invite.GetDlgItem(IDC_BTN_BYE)->EnableWindow(FALSE);	
-	m_Alarm.GetDlgItem(IDC_BTN_TIMESET)->EnableWindow(FALSE);	
+	m_PSTVSetTime.GetDlgItem(IDC_BUTTON_PSTVTIME)->EnableWindow(FALSE);
 }
 
 void CUACDlg::OnBnClickedBtnSendClear()

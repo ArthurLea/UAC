@@ -18,6 +18,7 @@
 #define IDD_DLG_VIDEOQUERY              136
 #define IDD_DLG_VIDEOPLAY               137
 #define IDB_BITMAP1                     138
+#define IDD_DLG_PSTVTIME                145
 #define IDC_BOX_TESTMEMBER              1000
 #define IDC_BTN_SET                     1001
 #define IDC_BTN_SIP_REGISTER            1002
@@ -72,6 +73,7 @@
 #define IDC_EDIT2                       1047
 #define IDC_PASSWORDC                   1047
 #define IDC_OPERATE                     1047
+#define IDC_EDIT_PSTVTIME               1047
 #define IDC_CHECK1                      1048
 #define IDC_EDIT_LEVEL                  1048
 #define IDC_ALARMTYPE                   1049
@@ -86,20 +88,22 @@
 #define IDC_STATUS                      1055
 #define IDC_EDIT_ENCODERPARAM           1055
 #define IDC_EDIT_ADDRESS                1055
+#define IDC_EDIT_NGTVTIME               1055
 #define IDC_COMBO1                      1056
 #define IDC_EDIT_PRIVILEGE              1056
 #define IDC_BUTTON_REBOOT               1057
 #define IDC_EDIT_ACCEPTIP               1057
 #define IDC_COMBO_ALARMTYPENAME         1058
 #define IDC_COMBO4                      1060
+#define IDC_BUTTON_PSTVTIME             1061
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        143
+#define _APS_NEXT_RESOURCE_VALUE        147
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1061
+#define _APS_NEXT_CONTROL_VALUE         1062
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

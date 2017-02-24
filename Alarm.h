@@ -20,10 +20,10 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	vector<CString> arrAlarmType;
-	afx_msg void OnBnClickedBtnTimeset();
 	afx_msg void OnBnClickedBtnAlarmCancel();
 	afx_msg void OnBnClickedBtnAlarmNotify3();
 	virtual BOOL OnInitDialog();
 	CComboBox m_selAddress;
 	CComboBox m_AlarmTypeSel;
+	afx_msg void OnCbnSelchangeComboAlarmtypename();
 };
