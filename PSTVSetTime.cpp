@@ -26,6 +26,7 @@ CPSTVSetTime::~CPSTVSetTime()
 void CPSTVSetTime::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_EDIT_URL, m_Edit_url);
 }
 
 
@@ -37,7 +38,8 @@ BOOL CPSTVSetTime::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
-	GetDlgItem(IDC_EDIT_PRIVILEGE)->SetWindowTextA("0100100001"); 
+	GetDlgItem(IDC_EDIT_PRIVILEGE)->SetWindowTextA("0100100001");
+	GetDlgItem(IDC_EDIT_URL)->SetWindowTextA("http://192.168.9.115/1.png");
 	return TRUE;
 }
 

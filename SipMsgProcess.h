@@ -74,11 +74,14 @@ public:
 	int CreateXMLptzPreBitQuery_c(char **dstXML,int begin,int end);
 	int CreateXMLVideoQuery(char **dstXML);
 	int CreateXMLVideoQuery_c(char **dstXML,int begin,int end);
+	int CreateXMLVideoQuery_h(char **dstXML, CTime begin, CTime end, int max);
 	int CreateXMLCatalogQuery(char **dstXML);
 	int CreateXMLCatalogQueryNote(char ** dstXML);
 	int CreateXMLDeviceInfQuery(char **dstXML);
 	int CreateXMLFlowQuery(char **dstXML);
 	void SipBYE(char **dst,osip_message_t *srcmsg);
+
+	BOOL NodeAnylse(InfoNotify & NotifyInfo, char * buf);
 
 	void ShowEncoderParam(char * buffer);
 };

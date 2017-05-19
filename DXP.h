@@ -80,6 +80,32 @@ struct InfoAlarm
 	string AcceptPort;
 	string CallID;
 };
+//设备信息
+struct InfoDvice
+{
+	CString Name;
+	CString Address;
+	//CString ResType;
+	//CString ResSubType;
+	CString Privilege;
+	CString Status;
+	CString Longitude;
+	CString Latitude;
+	CString Elevation;
+	CString Roadway;
+	CString PileNo;
+	CString AreaNo;
+	CString OperateType;
+//	CString UpdateTime;
+};
+struct InfoNotify
+{
+	CString Parent;
+	//CString TotalSubNum;
+	//CString TotalOnlineSubNum;
+	CString SubNum;
+	vector<InfoDvice> Devices;
+};
 struct UA_Msg
 {
 	//网络收包或发包数据缓冲区

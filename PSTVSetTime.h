@@ -1,4 +1,5 @@
 #pragma once
+#include "afxwin.h"
 
 
 // CPSTVSetTime ¶Ô»°¿ò
@@ -23,4 +24,5 @@ protected:
 public:
 	virtual BOOL OnInitDialog();
 	afx_msg void OnBnClickedButtonPstvtime();
+	CEdit m_Edit_url;
 };

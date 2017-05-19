@@ -18,6 +18,7 @@ static char ProcessIP[50]={0};
 static char m_SendIP[16]={0};
 vector<CString> HistoryVideoList;
 vector<CString> PresetInfoList;
+InfoNotify NotifyInfo;
 struct Authenticate g_authInfo;
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -348,8 +349,8 @@ void CUACDlg::InitProgram()
 	m_Ctab.SetCurSel(0);
 	bSipRegister=FALSE;
 	bNodeType=FALSE;
-	bACK=FALSE;
-	bBYE=FALSE;	
+	bACK=  FALSE;
+	bBYE = FALSE;	
 	CurStatusID.nSataus=99;
 	bShowRealTime=FALSE;
 	m_TCPSocket.Initialize(this);
@@ -527,7 +528,7 @@ int CUACDlg::GetLocalIp(const CString &sHostName, CString &sIpAddress)
 		if(sIpAddress.IsEmpty())
 			MessageBox("本地计算机IP地址获取失败","UAC 出错",MB_OK|MB_ICONERROR);
 	}
-	m_IpGroup.SetCurSel(1);  
+	m_IpGroup.SetCurSel(0);  
 
 	return 0;
 }
@@ -627,15 +628,15 @@ void CUACDlg::InitNetSet()
 
 	m_Invite.GetDlgItem(IDC_OPERATE)->SetWindowText("DEL");
 	m_Invite.GetDlgItem(IDC_STATUS)->SetWindowText("1");
-	m_Invite.GetDlgItem(IDC_PRIVILEGE)->SetWindowText("%00%08");
+	m_Invite.GetDlgItem(IDC_PRIVILEGE)->SetWindowText("20");
 
 	bNetSet=TRUE;
 }
 
 void CUACDlg::InitAlarm()
 {
-	m_Alarm.GetDlgItem(IDC_EDIT_ADDRESS)->SetWindowText("252000001199000001");
-	m_Alarm.GetDlgItem(IDC_EDIT_PRIVILEGE)->SetWindowText("%00%00%02");
+	m_Alarm.GetDlgItem(IDC_EDIT_ADDRESS)->SetWindowText("011061430001");
+	m_Alarm.GetDlgItem(IDC_EDIT_PRIVILEGE)->SetWindowText("20");
 	m_Alarm.GetDlgItem(IDC_EDIT_LEVEL)->SetWindowText("1");
 	m_Alarm.m_AlarmTypeSel.SetCurSel(0);
 	m_Alarm.GetDlgItem(IDC_ALARMTYPENUM)->SetWindowText("1");//表示高温报警

@@ -25,5 +25,6 @@ public:
 	virtual BOOL OnInitDialog();
 	CComboBox m_selAddress;
 	CComboBox m_AlarmTypeSel;
+	vector<CString> address;
 	afx_msg void OnCbnSelchangeComboAlarmtypename();
 };

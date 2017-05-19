@@ -63,6 +63,7 @@ BEGIN_MESSAGE_MAP(CAlarm, CDialog)
 	ON_BN_CLICKED(IDC_BTN_ALARM_CANCEL, &CAlarm::OnBnClickedBtnAlarmCancel)
 	ON_BN_CLICKED(IDC_BTN_ALARM_NOTIFY3, &CAlarm::OnBnClickedBtnAlarmNotify3)
 	ON_CBN_SELCHANGE(IDC_COMBO_ALARMTYPENAME, &CAlarm::OnCbnSelchangeComboAlarmtypename)
+//	ON_EN_CHANGE(IDC_EDIT_ADDRESS, &CAlarm::OnEnChangeEditAddress)
 END_MESSAGE_MAP()
 
 
@@ -294,3 +295,16 @@ void CAlarm::OnCbnSelchangeComboAlarmtypename()
 	CString alarmTypeNum = arrAlarmType[index];
 	GetDlgItem(IDC_ALARMTYPENUM)->SetWindowTextA(alarmTypeNum);
 }
+
+/*
+void CAlarm::OnEnChangeEditAddress()
+{
+	// TODO:  如果该控件是 RICHEDIT 控件，它将不
+	// 发送此通知，除非重写 CDialog::OnInitDialog()
+	// 函数并调用 CRichEditCtrl().SetEventMask()，
+	// 同时将 ENM_CHANGE 标志“或”运算到掩码中。
+	//CString Address=this->
+	//GetDlgItem(IDC_EDIT_ADDRESS)->SetWindowTextA(infoAlarm.Address)
+	// TODO:  在此添加控件通知处理程序代码
+}
+*/

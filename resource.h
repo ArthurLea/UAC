@@ -83,6 +83,7 @@
 #define IDC_ALARMTYPENUM                1051
 #define IDC_EDIT3                       1053
 #define IDC_PRIVILEGE                   1053
+#define IDC_EDIT_URL                    1053
 #define IDC_NAME                        1054
 #define IDC_EDIT1                       1055
 #define IDC_STATUS                      1055
@@ -96,6 +97,8 @@
 #define IDC_COMBO_ALARMTYPENAME         1058
 #define IDC_COMBO4                      1060
 #define IDC_BUTTON_PSTVTIME             1061
+#define IDC_STATIC_URL                  1062
+#define IDC_BUTTON_URL                  1063
 
 // Next default values for new objects
 // 
@@ -103,7 +106,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        147
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1062
+#define _APS_NEXT_CONTROL_VALUE         1064
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
