@@ -2971,16 +2971,16 @@ BOOL CSipMsgProcess::XmlInviteCreate(char** strInviteXml,char *srcXml)
 		return FALSE;	
 	}				
 	Video=strTemp.substr(VariableStart+7,VariableEnd-VariableStart-7).c_str();
-	if ((VariableStart = strTemp.find("<Stream>", 0)) == string::npos)
-	{
-		AfxMessageBox("实时流请求缺少Stream字段");
-		return FALSE;
-	}
-	if ((VariableEnd = strTemp.find("</Stream>", VariableStart + 1)) == string::npos)
-	{
-		AfxMessageBox("实时流请求缺少/Stream字段");
-		return FALSE;
-	}
+	//if ((VariableStart = strTemp.find("<Stream>", 0)) == string::npos)
+	//{
+	//	AfxMessageBox("实时流请求缺少Stream字段");
+	//	return FALSE;
+	//}
+	//if ((VariableEnd = strTemp.find("</Stream>", VariableStart + 1)) == string::npos)
+	//{
+	//	AfxMessageBox("实时流请求缺少/Stream字段");
+	//	return FALSE;
+	//}
 	if( (VariableStart=strTemp.find("<Audio>",0)) ==string::npos)			
 	{
 		AfxMessageBox("实时流请求缺少Audio字段");
@@ -3021,15 +3021,15 @@ BOOL CSipMsgProcess::XmlInviteCreate(char** strInviteXml,char *srcXml)
 	XmlInvite+="<Result>0</Result>\r\n";
 	XmlInvite += "<Format>" + Format + "</Format>\r\n"; //有的厂商不支持720，修改CIF
 	XmlInvite += "<Video>" + Video + "</Video>\r\n";
-	XmlInvite += "<Stream>RTP</Stream>\r\n";
+	//XmlInvite += "<Stream>RTP</Stream>\r\n";
 	XmlInvite += "<Audio>" + Audio + "</Audio>\r\n";
 	XmlInvite += "<Bitrate>300</Bitrate>\r\n";
 	XmlInvite += "<Multicast>" + Multicast + "</Multicast>\r\n";
-	XmlInvite+="<Socket>";//192.168.1.7 UDP 2300</Socket>\r\n";
+	XmlInvite+="<SendSocket>";//192.168.1.7 UDP 2300</Socket>\r\n";
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
 	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);	
 	XmlInvite += pWnd->m_InfoClient.IP;
-	XmlInvite += " UDP 2300</Socket>\r\n";
+	XmlInvite += " UDP 2300</SendSocket>\r\n";
 	XmlInvite+="<DecoderTag>manufacturer=H3C ver=V30</DecoderTag>\r\n";	
 	XmlInvite+="</Response>\r\n";	
 	strcpy(*strInviteXml,XmlInvite.c_str());
