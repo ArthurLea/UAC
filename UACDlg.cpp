@@ -161,7 +161,7 @@ BOOL CUACDlg::OnInitDialog()
 		DEFAULT_PITCH | FF_SWISS, // nPitchAndFamily 
 		_T("宋体"));              // lpszFac
 	GetDlgItem(IDC_SABOUT)->SetFont(f2);
-	// TODO: 在此添加额外的初始化代码
+
 	ifstream fin;
 	fin.open("HistoryVideoList.xml");
 	while(!fin.eof())
@@ -374,7 +374,6 @@ void CUACDlg::InitProgram()
 
 void CUACDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	// TODO: Add your control notification handler code here
 	int CurSel = m_Ctab.GetCurSel();
 	switch(CurSel)
 	{
@@ -501,10 +500,6 @@ int CUACDlg::GetLocalIp(const CString &sHostName, CString &sIpAddress)
 	}
 	//获取IP地址
 	LPSTR lpAddr=lpHostEnt->h_addr_list[0];
-	//if(lpHostEnt->h_length != 1)
-	//{
-	//	lpAddr = lpHostEnt->h_addr_list[lpHostEnt->h_length-1];
-	//}
 
 	if(lpAddr)
 	{
@@ -540,9 +535,6 @@ void CUACDlg::InitNetSet()
 	CString LocalHostName;
 	GetLocalHostName(LocalHostName);
 	GetLocalIp(LocalHostName,m_InfoClient.IP);
-	/*m_InfoClient.Port="5060";
-	m_InfoClient.UserAddress="123";
-	m_InfoClient.UserName="123";*/
 	//初始化网络配置文件
 	FILE *NetFile=NULL;
 	NetFile=fopen("UACNetLog.txt","r");	
@@ -605,22 +597,17 @@ void CUACDlg::InitNetSet()
 	GetDlgItem(IDC_STR_LOCAL_PORT)->SetWindowText(m_InfoClient.Port);
 	GetDlgItem(IDC_STR_LOCAL_ADD)->SetWindowText(m_InfoClient.UserAddress);
 	GetDlgItem(IDC_STR_LOCAL_NAME)->SetWindowText(m_InfoClient.UserName);	
-	//网络配置属性页初始化	
+	//client网络配置属性页初始化	
 	m_NetSet.GetDlgItem(IDC_IP_CLIENT)->SetWindowText(m_InfoClient.IP);
 	m_NetSet.GetDlgItem(IDC_EDT_CLIENT_PORT)->SetWindowText(m_InfoClient.Port);
 	m_NetSet.GetDlgItem(IDC_EDT_CLIENT_ADD)->SetWindowText(m_InfoClient.UserAddress);
 	m_NetSet.GetDlgItem(IDC_EDT_CLIENT_NAME)->SetWindowText(m_InfoClient.UserName);
 	m_NetSet.GetDlgItem(IDC_EDT_TCP_PORT)->SetWindowText(TCP_Port);
-	//服务端网络配置信息
-	/*m_InfoServer.IP="192.168.9.89";
-	m_InfoServer.Port="5060";
-	m_InfoServer.UserAddress="456";
-	m_InfoServer.UserName="456";*/
 	GetDlgItem(IDC_STR_REMOTE_IP)->SetWindowText(m_InfoServer.IP);
 	GetDlgItem(IDC_STR_REMOTE_PORT)->SetWindowText(m_InfoServer.Port);
 	GetDlgItem(IDC_STR_REMOTE_ADD)->SetWindowText(m_InfoServer.UserAddress);
 	GetDlgItem(IDC_STR_REMOTE_NAME)->SetWindowText(m_InfoServer.UserName);	
-	//网络配置属性页初始化	
+	//server网络配置属性页初始化	
 	m_NetSet.GetDlgItem(IDC_IP_SERVER)->SetWindowText(m_InfoServer.IP);
 	m_NetSet.GetDlgItem(IDC_EDT_SERVER_PORT)->SetWindowText(m_InfoServer.Port);
 	m_NetSet.GetDlgItem(IDC_EDT_SERVER_ADD)->SetWindowText(m_InfoServer.UserAddress);
@@ -668,13 +655,11 @@ void CUACDlg::InitEnableWindow()
 
 void CUACDlg::OnBnClickedBtnSendClear()
 {
-	// TODO: Add your control notification handler code here
 	m_ShowSendMsg.SetWindowText("");//IDC_EDT_SENDMSG
 }
 
 void CUACDlg::OnBnClickedBtnRecvClear()
 {
-	// TODO: Add your control notification handler code here
 	m_ShowRecvMsg.SetWindowText("");
 }
 
@@ -943,7 +928,6 @@ void CUACDlg::OnBnClickedBtnSipRegister()
 		h_UAC_Recv=CreateThread(NULL,0,RecvMsg,(LPVOID)pRecvParam,0,NULL);
 		h_UAC_Dispatch=CreateThread(NULL,0,DispatchRecvMsg,NULL,0,NULL);
 		h_UAC_Send=CreateThread(NULL,0,SendMsg,NULL,0,NULL);		
-		//CloseHandle(hThread)；
 		ShowSendData("\t----UDP communication is listening----\r\n");
 
 		//open TCP socket
@@ -963,7 +947,6 @@ void CUACDlg::OnBnClickedBtnSipRegister()
 			sip->SipRegisterCreate(&data,m_InfoServer,m_InfoClient);
 			//带有权签
 			//sip->SipRegisterWithAuthCreate(&data,m_InfoServer,m_InfoClient);
-			//SendData(data);		
 			UA_Msg uac_sendtemp;
 			strcpy(uac_sendtemp.data,data);
 
@@ -972,30 +955,10 @@ void CUACDlg::OnBnClickedBtnSipRegister()
 			uac_sendqueue.push(uac_sendtemp);
 			LeaveCriticalSection(&g_uac);
 
-			//ShowSendData(data);
 			delete data;		
 			ShowTestLogTitle="Register Test";
-			//update log	
 			ShowTestLogData+="REGISTER ------->  \r\n";
 		}
-
-// 		{char *data=new char[MAXBUFSIZE];
-// 		memset(data,0,MAXBUFSIZE);
-// 		CSipMsgProcess *sip;
-// 		sip=new CSipMsgProcess;
-// 		sip->SipRegisterCreate(&data,m_InfoServer,m_InfoClient);
-// 		//sip->SipRegisterWithAuthCreate(&data,m_InfoServer,m_InfoClient);
-// 		//SendData(data);		
-// 		UA_Msg uac_sendtemp;
-// 		strcpy(uac_sendtemp.data,data);
-// 		EnterCriticalSection(&g_uac);
-// 		uac_sendqueue.push(uac_sendtemp);
-// 		LeaveCriticalSection(&g_uac);
-// 		//ShowSendData(data);
-// 		delete data;		
-// 		ShowTestLogTitle="Register Test";
-// 		//update log	
-// 		ShowTestLogData+="REGISTER ------->  \r\n";}
 
 		//开启SIP按钮不可用
 		EnableWindow(IDC_BTN_SIP_REGISTER,FALSE);//注册按钮不可用
@@ -1011,21 +974,18 @@ void CUACDlg::OnBnClickedBtnSipRegister()
 
 void CUACDlg::OnBnClickedBtnSet()
 {
-	// TODO: Add your control notification handler code here
 	CSetTestMember dlg;
 	dlg.DoModal();
 }
 
 void CUACDlg::OnBnClickedBtnLog()
 {
-	// TODO: Add your control notification handler code here
 	CLOG dlg;
 	dlg.DoModal();
 }
 
 void CUACDlg::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: Add your message handler code here and/or call default	
 	if ( 0/*bRtspLive*/ )
 	{
 		nRstpTimeCount++;

@@ -388,7 +388,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 		}
 		else if (strcmp(var,"RealTimeKeepLive")==0 )
 		{		
-			pWnd->bRealTimeFlag=TRUE;
+			pWnd->bRealTimeFlag = TRUE;
 			char *dst=new char[MAXBUFSIZE];
 			Sip200OK(&dst,m_SipMsg.msg);				
 			UA_Msg uac_sendtemp;
@@ -976,7 +976,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			for (int i = 2; i < HistoryVideoList.size(); i +=6)
 			{
 				//截取列表中每一个时间，与传入的时间作比较，得到需要发送的历史流列表
-				 tem = HistoryVideoList[i];
+				tem = HistoryVideoList[i];
 				variableStart = tem.find("<CreationTime>", 0);
 				variableEnd = tem.find("</CreationTime>", 0);
 				temcreatetime = tem.substr(variableStart + 14, variableEnd - variableStart - 14);
@@ -1137,14 +1137,14 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			CString strTemp;
 			strTemp="<?xml version=\"1.0\"?>\r\n";
 			strTemp+="<Response>\r\n";
-			//strTemp+="<QueryResponse>\r\n";
+			strTemp+="<QueryResponse>\r\n";
 			strTemp+="<Variable>VOD</Variable>\r\n";
 			strTemp+="<Result>0</Result>\r\n";
 			strTemp+="<Bitrate>100</Bitrate>\r\n";
 			//rtsp://192.168.1.7:8554/filename.264
 			// rtsp://192.168.1.7:8554/<filename>
 			strTemp+="<Playurl>rtsp://"+pWnd->m_InfoClient.IP+":"+/*pWnd->TCP_Port*/"8554/zhen.ts"+"</Playurl>\r\n";
-			//strTemp+="</QueryResponse>\r\n";
+			strTemp+="</QueryResponse>\r\n";
 			strTemp+="</Response>\r\n";
 			char*xml=(LPSTR)(LPCTSTR)strTemp;
 			char *dst=new char[MAXBUFSIZE];
@@ -1869,7 +1869,7 @@ void CSipMsgProcess::XmlNodeCreate(char** strNodeXml)
 	strTemp += "<SubList>\r\n";
 	strTemp += "<Item>\r\n";
 	strTemp += "<Name>CAM-0001</Name>\r\n";
-	strTemp += "<Address>011061430001</Address>\r\n";
+	strTemp += "<Address>011051430001</Address>\r\n";
 	//strTemp += "<Privilege>%00%80</Privilege>\r\n";
 	strTemp += "<Privilege>20</Privilege>\r\n";
 	//	strTemp+="<ResType>1</ResType>\r\n";
@@ -1896,7 +1896,7 @@ void CSipMsgProcess::XmlNodeCreate(char** strNodeXml)
 	strTemp += "<Item>\r\n";
 	strTemp += "<Name>IPC-01</Name>\r\n";
 	//NotifyInfo.Devices[0].Name = "IPC-01";
-	strTemp += "<Address>011061450001</Address>\r\n";
+	strTemp += "<Address>011051450001</Address>\r\n";
 	//	strTemp += "<Privilege>%02</Privilege>\r\n";//监控摄像机的控制功能，贵州版本是这样
 	strTemp += "<Privilege>20</Privilege>\r\n";//这里等于用户的类型编码
 											   //strTemp+="<ResType>1</ResType>\r\n";
@@ -1917,7 +1917,7 @@ void CSipMsgProcess::XmlNodeCreate(char** strNodeXml)
 	strTemp += "</Item>\r\n";
 
 	pWnd->m_Invite.m_address.AddString("IPC-01");
-	pWnd->m_Invite.address.push_back("011061450001");
+	pWnd->m_Invite.address.push_back("011051450001");
 
 //	pWnd->m_Alarm.m_selAddress.AddString("IPC-01");
 //	pWnd->m_Alarm.address.push_back("011061450001");
@@ -2273,12 +2273,12 @@ void CSipMsgProcess::Sip200OK(char **dst,osip_message_t *srcmsg)
 	}	
 	osip_cseq_clone(srcmsg->cseq,&Sip200->m_SipMsg.msg->cseq);
 	//copy contact
-	/*osip_message_get_contact(srcmsg,0,&Sip200->m_SipMsg.contact);
+	osip_message_get_contact(srcmsg,0,&Sip200->m_SipMsg.contact);
 	osip_contact_to_str(Sip200->m_SipMsg.contact,&dest);
-	osip_message_set_contact(Sip200->m_SipMsg.msg,dest);*/
-	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
-	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
-	osip_message_set_contact(Sip200->m_SipMsg.msg,pWnd->contact);
+	osip_message_set_contact(Sip200->m_SipMsg.msg,dest);
+	//HWND   hnd=::FindWindow(NULL, _T("UAC"));	
+	//CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
+	//osip_message_set_contact(Sip200->m_SipMsg.msg,pWnd->contact);
 	osip_free(dest);
 	//copy via
 	osip_message_get_via(srcmsg,0,&Sip200->m_SipMsg.via);
@@ -2333,19 +2333,19 @@ void CSipMsgProcess::Sip100Try(char **dst,osip_message_t *srcmsg)
 		osip_call_id_clone(srcmsg->call_id,&Sip->m_SipMsg.msg->call_id);	
 	osip_from_clone(srcmsg->from,&Sip->m_SipMsg.msg->from);
 	osip_to_clone(srcmsg->to,&Sip->m_SipMsg.msg->to);	
-	//osip_to_set_tag(Sip->m_SipMsg.msg->to,FromTag);	
+	//osip_to_set_tag(Sip->m_SipMsg.msg->to,FromTag);	100try
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
 	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
 	strcpy(pWnd->invite100tag,FromTag);
 	osip_cseq_clone(srcmsg->cseq,&Sip->m_SipMsg.msg->cseq);
 	//copy contact
-	/*osip_message_get_contact(srcmsg,0,&Sip->m_SipMsg.contact);
+	osip_message_get_contact(srcmsg,0,&Sip->m_SipMsg.contact);
 	osip_contact_to_str(Sip->m_SipMsg.contact,&dest);
-	osip_message_set_contact(Sip->m_SipMsg.msg,dest);*/	
-	osip_message_set_contact(Sip->m_SipMsg.msg,pWnd->contact);
+	osip_message_set_contact(Sip->m_SipMsg.msg,dest);	
+	//osip_message_set_contact(Sip->m_SipMsg.msg,pWnd->contact);
 	osip_free(dest);
 	//copy via
-	osip_message_get_via(srcmsg,0,&Sip->m_SipMsg.via);
+	osip_message_get_via(srcmsg,0,&Sip->m_SipMsg.via);//
 	osip_via_to_str(Sip->m_SipMsg.via,&dest);
 	osip_message_set_via(Sip->m_SipMsg.msg,dest);
 	CSipMsgProcess *Sip200=new CSipMsgProcess;
@@ -2355,8 +2355,8 @@ void CSipMsgProcess::Sip100Try(char **dst,osip_message_t *srcmsg)
 	{
 		osip_via_to_str(Sip200->m_SipMsg.via,&dest);
 		osip_message_set_via(Sip->m_SipMsg.msg,dest);
-		st0=dest;
-		st0="Via: "+st0+"\r\n";		
+		st0 = dest;
+		st0="Via: " + st0 + "\r\n";		
 	}
 	else
 	{
@@ -2833,7 +2833,7 @@ BOOL CSipMsgProcess::XmlInviteCreate(char** strInviteXml,char *srcXml)
  		AfxMessageBox("实时流请求缺少Multicast字段");
  		return FALSE;	
  	}			
- 	Multicast=strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11).c_str();
+ 	Multicast = strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11).c_str();
 	string XmlInvite;	
 	XmlInvite="<?xml version=\"1.0\"?>\r\n";
 	XmlInvite+="<Response>\r\n";
@@ -2848,7 +2848,10 @@ BOOL CSipMsgProcess::XmlInviteCreate(char** strInviteXml,char *srcXml)
 	XmlInvite+="<SendSocket>";//192.168.1.7 UDP 2300</Socket>\r\n";
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
 	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);	
-	XmlInvite += pWnd->m_InfoClient.IP;
+	if (Multicast == "1")//组播
+		XmlInvite += "239.0.0.1";
+	else//单播
+		XmlInvite += pWnd->m_InfoClient.IP;
 	XmlInvite += " UDP 2300</SendSocket>\r\n";
 	XmlInvite+="<DecoderTag>manufacturer=H3C ver=V30</DecoderTag>\r\n";	
 	XmlInvite+="</Response>\r\n";	
@@ -3808,7 +3811,7 @@ int CSipMsgProcess::CreateXMLVideoQuery_c(char **dstXML,int begin,int end)
 	strTemp+="<QueryResponse>\r\n";
 	strTemp+="<Variable>FileList</Variable>\r\n";
 	strTemp+="<Result>0</Result>\r\n";	
-	strTemp+="<RealFileNum>49</RealFileNum>\r\n";
+	strTemp+="<RealFileNum>2</RealFileNum>\r\n";
 	CString cst;
 	
 	/*cst.Format("%d",begin);
@@ -3818,19 +3821,27 @@ int CSipMsgProcess::CreateXMLVideoQuery_c(char **dstXML,int begin,int end)
 	//strTemp+="<DecoderTag>Manufacturer=H3C ver=V30</DecoderTag>\r\n";
 	*/
 	cst.Format("%d",end- begin);
-	strTemp += "<SendFileNum>" + cst + "</SendFileNum>\r\n";
+	//strTemp += "<SendFileNum>" + cst + "</SendFileNum>\r\n";
+	strTemp += "<SendFileNum>2</SendFileNum>\r\n";
 	strTemp+="<FileInfoList>\r\n";
 
-	for (int i=begin*6;i<end*6;i++)
-	{
-		strTemp+=HistoryVideoList[i]+"\r\n";
-	}
-// 	strTemp+="<Item>\r\n";
-// 	strTemp+="<Name>xiaoshan_20051101001.mp4</Name>\r\n";
-// 	strTemp+="<BeginTime>20051110T132050Z</BeginTime>\r\n";
-// 	strTemp+="<EndTime>20051110T133050Z</EndTime>\r\n";
-// 	strTemp+="<FileSize>500000</FileSize>\r\n";	
-// 	strTemp+="</Item>\r\n";
+	//for (int i=begin*6;i<end*6;i++)
+	//{
+	//	strTemp+=HistoryVideoList[i]+"\r\n";
+	//}
+ 	strTemp+="<Item>\r\n";
+ 	strTemp+="<Name>xiaoshan_20051101001.mp4</Name>\r\n";
+ 	strTemp+="<CreationTime>2017-06-06T00:00:00Z</CreationTime>\r\n";
+ 	strTemp+="<LastWriteTime>2017-06-07T00:00:00Z</LastWriteTime>\r\n";
+ 	strTemp+="<FileSize>500000</FileSize>\r\n";	
+ 	strTemp+="</Item>\r\n";
+
+	strTemp += "<Item>\r\n";
+	strTemp += "<Name>xiaoshan_20051101001.mp4</Name>\r\n";
+	strTemp += "<CreationTime>2017-06-07T00:20:00Z</CreationTime>\r\n";
+	strTemp += "<LastWriteTime>2017-07-07T12:30:00Z</LastWriteTime>\r\n";
+	strTemp += "<FileSize>500000</FileSize>\r\n";
+	strTemp += "</Item>\r\n";
 // 
 // 	strTemp+="<Item>\r\n";
 // 	strTemp+="<Name>xiaoshan_20051101002.mp4</Name>\r\n";
@@ -3876,7 +3887,7 @@ int CSipMsgProcess::CreateXMLVideoQuery_h(char ** dstXML, CTime begin, CTime end
 	strTemp += "<QueryResponse>\r\n";
 	strTemp += "<Variable>FileList</Variable>\r\n";
 	strTemp += "<Result>0</Result>\r\n";
-	strTemp += "<RealFileNum>49</RealFileNum>\r\n";
+	strTemp += "<RealFileNum>1</RealFileNum>\r\n";
 	CString cst;
 
 	/*cst.Format("%d",begin);

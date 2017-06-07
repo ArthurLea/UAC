@@ -119,7 +119,7 @@ void CAlarm::OnBnClickedBtnAlarmCancel()
 	XmlAlarm = "<?xml version=\"1.0\"?>\r\n";
 	XmlAlarm += "<Action>\r\n";
 	XmlAlarm += "<Notify>\r\n";
-	XmlAlarm += "<Variable>AlarmNotify</Variable>\r\n";
+	XmlAlarm += "<Variable>Alarm</Variable>\r\n";
 	//XmlAlarm += "<Privilege>" + UserCode + "</Privilege>\r\n";
 	XmlAlarm += "<Address>" + Address + "</Address>\r\n";
 	XmlAlarm += "<Level>" + Level + "</Level>\r\n";
@@ -169,7 +169,7 @@ void CAlarm::OnBnClickedBtnAlarmCancel()
 		delete xml;
 		//update log
 		pWnd->ShowTestLogData = "NOTIFY -------->\r\n";
-		pWnd->ShowTestLogTitle = "AlarmNotify Send Test";
+		pWnd->ShowTestLogTitle = "Alarm Send Test";
 		pWnd->CurStatusID.nSataus = Alarm;
 	}
 	else {
@@ -229,7 +229,7 @@ void CAlarm::OnBnClickedBtnAlarmNotify3()
 	XmlAlarm = "<?xml version=\"1.0\"?>\r\n";
 	XmlAlarm += "<Action>\r\n";
 	XmlAlarm += "<Notify>\r\n";
-	XmlAlarm += "<Variable>AlarmNotify</Variable>\r\n";
+	XmlAlarm += "<Variable>Alarm</Variable>\r\n";
 	//XmlAlarm += "<Privilege>" + UserCode + "</Privilege>\r\n";
 	XmlAlarm += "<Address>" + Address + "</Address>\r\n";
 	XmlAlarm += "<Level>" + Level + "</Level>\r\n";
@@ -279,7 +279,7 @@ void CAlarm::OnBnClickedBtnAlarmNotify3()
 		delete xml;
 		//update log
 		pWnd->ShowTestLogData = "NOTIFY -------->\r\n";
-		pWnd->ShowTestLogTitle = "AlarmNotify Send Test";
+		pWnd->ShowTestLogTitle = "Alarm Send Test";
 		pWnd->CurStatusID.nSataus = Alarm;
 	}
 	else {
