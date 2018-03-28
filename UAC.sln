@@ -5,8 +5,6 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UAC", "UAC.vcxproj", "{5E6554B6-D184-46D5-86BA-22B3980827EC}"
 EndProject
-Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "UACSetup", "..\UACSetup\UACSetup.vdproj", "{F93D4623-F411-4B40-977A-64CCBB1206C1}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -17,8 +15,6 @@ Global
 		{5E6554B6-D184-46D5-86BA-22B3980827EC}.Debug|Win32.Build.0 = Debug|Win32
 		{5E6554B6-D184-46D5-86BA-22B3980827EC}.Release|Win32.ActiveCfg = Release|Win32
 		{5E6554B6-D184-46D5-86BA-22B3980827EC}.Release|Win32.Build.0 = Release|Win32
-		{F93D4623-F411-4B40-977A-64CCBB1206C1}.Debug|Win32.ActiveCfg = Debug
-		{F93D4623-F411-4B40-977A-64CCBB1206C1}.Release|Win32.ActiveCfg = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

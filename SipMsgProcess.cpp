@@ -1143,7 +1143,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			strTemp+="<Bitrate>100</Bitrate>\r\n";
 			//rtsp://192.168.1.7:8554/filename.264
 			// rtsp://192.168.1.7:8554/<filename>
-			strTemp+="<Playurl>rtsp://"+pWnd->m_InfoClient.IP+":"+/*pWnd->TCP_Port*/"8554/zhen.ts"+"</Playurl>\r\n";
+			strTemp+="<Playurl>rtsp://"+pWnd->m_InfoClient.IP+":"+/*pWnd->TCP_Port*/"8554/060111410001-060110600001-100316183000.ts"+"</Playurl>\r\n";
 			strTemp+="</QueryResponse>\r\n";
 			strTemp+="</Response>\r\n";
 			char*xml=(LPSTR)(LPCTSTR)strTemp;
@@ -1872,7 +1872,7 @@ void CSipMsgProcess::XmlNodeCreate(char** strNodeXml)
 	strTemp += "<Address>011051430001</Address>\r\n";
 	//strTemp += "<Privilege>%00%80</Privilege>\r\n";
 	strTemp += "<Privilege>20</Privilege>\r\n";
-	//	strTemp+="<ResType>1</ResType>\r\n";
+	strTemp+="<ResType>1</ResType>\r\n";
 	//	strTemp+="<ResSubType>0</ResSubType>\r\n";//restype为1时有意义
 	//strTemp+="<SeriesNumber>000000000123</SeriesNumber>\r\n";
 	strTemp += "<Status>0</Status>\r\n";
@@ -1946,8 +1946,6 @@ void CSipMsgProcess::XmlNodeCreate(char** strNodeXml)
 		pWnd->m_FlowQuery.m_selAddress.InsertString(i, NotifyInfo.Devices[i].Name);
 	}
 	*/
-
-
 }
 
 void CSipMsgProcess::XmlNodeCreate1(char** strNodeXml)
@@ -2256,7 +2254,7 @@ void CSipMsgProcess::Sip200OK(char **dst,osip_message_t *srcmsg)
 	osip_message_set_status_code(Sip200->m_SipMsg.msg,200);
 	osip_message_set_reason_phrase(Sip200->m_SipMsg.msg,"OK");
 	//osip_call_id_clone(srcmsg->call_id,&Sip200->m_SipMsg.msg->call_id);	
-	//if ( strcmp(srcmsg->call_id->host,"")==0 )
+	//if ( strcmp(srcmsg->call_id->host,"") == 0)
 	//{	
 		osip_call_id_set_number(Sip200->m_SipMsg.callid,srcmsg->call_id->number);
 		osip_call_id_to_str(Sip200->m_SipMsg.callid,&dest);
@@ -2273,13 +2271,16 @@ void CSipMsgProcess::Sip200OK(char **dst,osip_message_t *srcmsg)
 	}	
 	osip_cseq_clone(srcmsg->cseq,&Sip200->m_SipMsg.msg->cseq);
 	//copy contact
-	osip_message_get_contact(srcmsg,0,&Sip200->m_SipMsg.contact);
-	osip_contact_to_str(Sip200->m_SipMsg.contact,&dest);
-	osip_message_set_contact(Sip200->m_SipMsg.msg,dest);
-	//HWND   hnd=::FindWindow(NULL, _T("UAC"));	
-	//CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
-	//osip_message_set_contact(Sip200->m_SipMsg.msg,pWnd->contact);
-	osip_free(dest);
+	if (m_SipMsg.contact->gen_params.nb_elt > 0)
+	{
+		osip_message_get_contact(srcmsg, 0, &Sip200->m_SipMsg.contact);
+		osip_contact_to_str(Sip200->m_SipMsg.contact, &dest);
+		osip_message_set_contact(Sip200->m_SipMsg.msg, dest);
+		//HWND   hnd=::FindWindow(NULL, _T("UAC"));	
+		//CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
+		//osip_message_set_contact(Sip200->m_SipMsg.msg,pWnd->contact);
+		osip_free(dest);
+	}
 	//copy via
 	osip_message_get_via(srcmsg,0,&Sip200->m_SipMsg.via);
 	osip_via_to_str(Sip200->m_SipMsg.via,&dest);
@@ -2356,13 +2357,13 @@ void CSipMsgProcess::Sip100Try(char **dst,osip_message_t *srcmsg)
 		osip_via_to_str(Sip200->m_SipMsg.via,&dest);
 		osip_message_set_via(Sip->m_SipMsg.msg,dest);
 		st0 = dest;
-		st0="Via: " + st0 + "\r\n";		
+		st0="Via: " + st0 + "\r\n";
+		osip_free(dest);
 	}
 	else
 	{
 		st0="";
 	}
-	osip_free(dest);
 	osip_message_set_max_forwards(Sip->m_SipMsg.msg,"70");
 	osip_message_to_str(Sip->m_SipMsg.msg,&dest,&len);
 	memset(*dst,0,MAXBUFSIZE);
@@ -2403,12 +2404,12 @@ void CSipMsgProcess::Sip400(char **dst,osip_message_t *srcmsg)
 	}
 	osip_cseq_clone(srcmsg->cseq,&Sip200->m_SipMsg.msg->cseq);
 	//copy contact
-	/*osip_message_get_contact(srcmsg,0,&Sip200->m_SipMsg.contact);
+	osip_message_get_contact(srcmsg,0,&Sip200->m_SipMsg.contact);
 	osip_contact_to_str(Sip200->m_SipMsg.contact,&dest);
-	osip_message_set_contact(Sip200->m_SipMsg.msg,dest);*/
-	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
-	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
-	osip_message_set_contact(Sip200->m_SipMsg.msg,pWnd->contact);
+	osip_message_set_contact(Sip200->m_SipMsg.msg,dest);
+	//HWND   hnd=::FindWindow(NULL, _T("UAC"));	
+	//CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
+	//osip_message_set_contact(Sip200->m_SipMsg.msg,pWnd->contact);
 	osip_free(dest);
 	//copy via
 	osip_message_get_via(srcmsg,0,&Sip200->m_SipMsg.via);
@@ -2417,19 +2418,16 @@ void CSipMsgProcess::Sip400(char **dst,osip_message_t *srcmsg)
 	CString st0;
 	if (1==i)
 	{
-
 		osip_via_to_str(Sip200->m_SipMsg.via,&dest);
 		osip_message_set_via(Sip200->m_SipMsg.msg,dest);
 		st0=dest;
 		st0="Via: "+st0+"\r\n";		
+		osip_free(dest);	
 	}
 	else
 	{
 		st0="";
 	}
-	osip_via_to_str(Sip200->m_SipMsg.via,&dest);
-	osip_message_set_via(Sip200->m_SipMsg.msg,dest);
-	osip_free(dest);	
 	osip_message_to_str(Sip200->m_SipMsg.msg,&dest,&len);
 	memset(*dst,0,MAXBUFSIZE);
 	memcpy(*dst,dest,len);
@@ -3719,12 +3717,10 @@ int CSipMsgProcess::CreateXMLptzPreBitQuery_c(char **dstXML,int begin,int end)
 	strTemp+="<RealPresetNum>49</RealPresetNum>\r\n";
     CString cst;
     cst.Format("%d", end-begin);
-	strTemp += "<SendPressNum>"+cst+"</SendPressNum>\r\n";
+	strTemp += "<SendPresetNum>"+cst+"</SendPresetNum>\r\n";
 
-		cst.Format("%d", 49-end);
-			strTemp += "<RemainPresetNum>"+cst+"</RemainPresetNum>\r\n";
-	
-
+	cst.Format("%d", 49-end);
+	strTemp += "<RemainPresetNum>"+cst+"</RemainPresetNum>\r\n";
 	//strTemp+="<FromIndex>"+cst+"</FromIndex>\r\n";
 	//cst.Format("%d",end);
 	//strTemp+="<ToIndex>"+cst+"</ToIndex>\r\n";
@@ -3831,15 +3827,15 @@ int CSipMsgProcess::CreateXMLVideoQuery_c(char **dstXML,int begin,int end)
 	//}
  	strTemp+="<Item>\r\n";
  	strTemp+="<Name>xiaoshan_20051101001.mp4</Name>\r\n";
- 	strTemp+="<CreationTime>2017-06-06T00:00:00Z</CreationTime>\r\n";
- 	strTemp+="<LastWriteTime>2017-06-07T00:00:00Z</LastWriteTime>\r\n";
+ 	strTemp+="<CreationTime>2017-06-06T01:00:00Z</CreationTime>\r\n";
+ 	strTemp+="<LastWriteTime>2017-06-076T12:00:00Z</LastWriteTime>\r\n";
  	strTemp+="<FileSize>500000</FileSize>\r\n";	
  	strTemp+="</Item>\r\n";
 
 	strTemp += "<Item>\r\n";
 	strTemp += "<Name>xiaoshan_20051101001.mp4</Name>\r\n";
-	strTemp += "<CreationTime>2017-06-07T00:20:00Z</CreationTime>\r\n";
-	strTemp += "<LastWriteTime>2017-07-07T12:30:00Z</LastWriteTime>\r\n";
+	strTemp += "<CreationTime>2017-06-07T03:20:00Z</CreationTime>\r\n";
+	strTemp += "<LastWriteTime>2017-06-07T12:30:00Z</LastWriteTime>\r\n";
 	strTemp += "<FileSize>500000</FileSize>\r\n";
 	strTemp += "</Item>\r\n";
 // 
@@ -4182,6 +4178,7 @@ void CSipMsgProcess::SipBYE(char **dst,osip_message_t *srcmsg)
 	memcpy(*dst,dest,len);
 	osip_free(dest);
 }
+
 BOOL CSipMsgProcess::NodeAnylse(InfoNotify& NotifyInfo, char *buf)
 {
 	string strTemp(buf);
@@ -4242,6 +4239,7 @@ BOOL CSipMsgProcess::NodeAnylse(InfoNotify& NotifyInfo, char *buf)
 	}
 	return TRUE;
 }
+
 /**
 将编码器设置参数显示到UAC端
 **/

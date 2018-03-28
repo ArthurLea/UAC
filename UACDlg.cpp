@@ -205,7 +205,6 @@ void CUACDlg::OnSysCommand(UINT nID, LPARAM lParam)
 // 如果向对话框添加最小化按钮，则需要下面的代码
 //  来绘制该图标。对于使用文档/视图模型的 MFC 应用程序，
 //  这将由框架自动完成。
-
 void CUACDlg::OnPaint()
 {
 	if (IsIconic())
@@ -1156,9 +1155,9 @@ int CUACDlg::AnalyseMsg(char* msg)
 		{				
 			if( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
 			{			
-				setupTemp=strTemp.substr(VariableStart,VariableEnd-VariableStart);
-				dest+=setupTemp;
-				dest+="\r\n";
+				setupTemp = strTemp.substr(VariableStart,VariableEnd-VariableStart);
+				dest += setupTemp;
+				dest += "\r\n";
 			}
 		}
 		if ( (VariableStart=strTemp.find("Transport:",0)) !=string::npos )
@@ -1268,7 +1267,7 @@ LRESULT CUACDlg::OnReceive(WPARAM wParam, LPARAM lParam)
 	p_curClient->Receive(buf,MAXBUFSIZE);
 	Sleep(100);
 	int nflag=1;
-	nflag=AnalyseMsg(buf);
+	nflag = AnalyseMsg(buf);
 	switch ( nflag )
 	{
 	case 0:

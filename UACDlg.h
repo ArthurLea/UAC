@@ -139,7 +139,6 @@ public:
 	afx_msg void OnStnClickedSabout();
 	CComboBox m_IpGroup;
 	afx_msg void OnCbnSelchangeCombo1();
-	afx_msg void OnBnClickedButton1();
 	afx_msg void OnBnClickedButtonReboot();
 	afx_msg void OnBnClickedCheck1();
 	BOOL m_bIsShowKeepAliveMsg;
