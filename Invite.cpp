@@ -78,7 +78,7 @@ void CInvite::OnBnClickedButton1()
 	CString strTemp;
 	strTemp="<?xml version=\"1.0\"?>\r\n";
 	strTemp+="<Action>\r\n";
-	strTemp+="<Variable>Catalog</Variable>\r\n";
+	strTemp+="<CmdType>Catalog</CmdType>\r\n";
 	strTemp+="<Parent>"+pWnd->m_InfoClient.UserAddress+"</Parent>\r\n";	
 	strTemp+="<TotalSubNum>10</TotalSubNum>\r\n";
 	strTemp+="<TotalOnlineSubNum>2</TotalOnlineSubNum>\r\n";

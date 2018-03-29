@@ -5,9 +5,6 @@
 #include "Alarm.h"
 #include "CoderSet.h"
 #include "Invite.h"
-#include "PTZ.h"
-#include "VideoQuery.h"
-#include "VideoPlay.h"
 #include "afxcmn.h"
 #include "afxwin.h"
 #include "DXP.h"
@@ -113,9 +110,6 @@ public:
 	CTabCtrl m_Ctab;
 	CNetSet m_NetSet;
 	CInvite m_Invite;
-	CPTZ m_PTZ;
-	CVideoQuery m_VideoQuery;
-	CVideoPlay m_VideoPlay;
 	CCoderSet m_CoderSet;
 	CAlarm m_Alarm;
 	CPSTVSetTime m_PSTVSetTime;
@@ -142,4 +136,5 @@ public:
 	afx_msg void OnBnClickedButtonReboot();
 	afx_msg void OnBnClickedCheck1();
 	BOOL m_bIsShowKeepAliveMsg;
+	afx_msg void OnBnClickedBtnSipQuit();
 };

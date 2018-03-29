@@ -11,12 +11,9 @@
 #define IDD_DLG_NETSET                  129
 #define IDD_DLG_INVITE                  130
 #define IDD_DLG_CODER_SET               131
-#define IDD_DLG_PTZ                     132
 #define IDD_DLG_ALARM                   133
 #define IDD_DLG_TESTMEMBER              134
 #define IDD_DLG_LOG                     135
-#define IDD_DLG_VIDEOQUERY              136
-#define IDD_DLG_VIDEOPLAY               137
 #define IDB_BITMAP1                     138
 #define IDD_DLG_PSTVTIME                145
 #define IDC_BOX_TESTMEMBER              1000
@@ -37,6 +34,7 @@
 #define IDC_STR_REMOTE_PORT             1015
 #define IDC_STR_REMOTE_ADD              1016
 #define IDC_STR_REMOTE_NAME             1017
+#define IDC_BTN_SIP_QUIT                1018
 #define IDC_IP_SERVER                   1019
 #define IDC_EDT_SERVER_PORT             1020
 #define IDC_IP_CLIENT                   1021
@@ -81,6 +79,7 @@
 #define IDC_EDIT_ACCEPTPORT             1050
 #define IDC_ADDRESS                     1051
 #define IDC_ALARMTYPENUM                1051
+#define IDC_EDIT_LATITUDE               1052
 #define IDC_EDIT3                       1053
 #define IDC_PRIVILEGE                   1053
 #define IDC_EDIT_URL                    1053
@@ -95,6 +94,7 @@
 #define IDC_BUTTON_REBOOT               1057
 #define IDC_EDIT_ACCEPTIP               1057
 #define IDC_COMBO_ALARMTYPENAME         1058
+#define IDC_EDIT_LONGITUDE              1059
 #define IDC_COMBO4                      1060
 #define IDC_BUTTON_PSTVTIME             1061
 #define IDC_STATIC_URL                  1062

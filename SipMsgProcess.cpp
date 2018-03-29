@@ -66,12 +66,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 	//m_SipMsg.msg->message = buffer;//初始化mes->message,以获取expires，max_forward等
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
 	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);	
-	//char *Alarmtemp=NULL;
-	//if (m_SipMsg.msg->call_id->host==NULL)
-	//{		
-	//	osip_call_id_to_str(m_SipMsg.msg->call_id,&(Common::nowReservingEventMsg_ArarmCallID));
-	//	m_SipMsg.msg->call_id->host="";
-	//}
+
 	if (m_SipMsg.msg->call_id->number==NULL)
 	{
 		m_SipMsg.msg->call_id->number="";
@@ -175,13 +170,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 		osip_via_to_str(Sip200->m_SipMsg.via,&dest);
 		osip_message_set_via(Sip200->m_SipMsg.msg,dest);
 		osip_free(dest);
-		/*osip_via_set_version(Sip200->m_SipMsg.via,"2.0");
-		osip_via_set_protocol(Sip200->m_SipMsg.via,"UDP");
-		osip_via_set_port(Sip200->m_SipMsg.via,m_SipMsg.msg->from->url->port);	
-		osip_via_set_host(Sip200->m_SipMsg.via,m_SipMsg.msg->from->url->host);		
-		osip_via_to_str(Sip200->m_SipMsg.via,&dest);
-		osip_message_set_via(Sip200->m_SipMsg.msg,dest);
-		osip_free(dest);*/
+
 		osip_message_set_max_forwards(Sip200->m_SipMsg.msg,"70");
 		osip_message_to_str(Sip200->m_SipMsg.msg,&dest,&len);
 		memset(dst,0,MAXBUFSIZE);
@@ -199,17 +188,18 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 		delete dst;			
 	}
 /***********************************************************************/
-/*这里是各种"DO"请求的XML解析 writed by Bsp Lee                          */
+/*这里是各种"Message"请求的XML解析 writed by Bsp Lee                          */
 /*PTZCommand PresetList FileList VODByRTSP */
 /*ItemList DeviceInfo BandWidth EncoderSet TimeSet RealTimeKeepLive*/
+/*For 28181：DeviceControl Alarm Catalog*/
 /***********************************************************************/
-	else if (strcmp(m_SipMsg.msg->sip_method,"DO")==0 && m_SipMsg.msg->status_code == 0)
+	else if (strcmp(m_SipMsg.msg->sip_method,"Message")==0 && m_SipMsg.msg->status_code == 0)
 	{		
-		char var[50];
-		string::size_type VariableStart;	
-		string::size_type VariableEnd;		
-		if( ((VariableStart= strXML.find("<Variable>",0)) ==string::npos)
-			||(VariableEnd= strXML.find("</Variable>", VariableStart + 1))==string::npos)
+		char CmdType[50];
+		string::size_type CmdTypeStart;	
+		string::size_type CmdTypeEnd;		
+		if( ((CmdTypeStart= strXML.find("<CmdType>",0)) ==string::npos)
+			||(CmdTypeEnd= strXML.find("</CmdType>", CmdTypeStart + 1))==string::npos)
 		{
 			char *dst=new char[MAXBUFSIZE];
 			Sip400(&dst,m_SipMsg.msg);
@@ -220,23 +210,21 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			LeaveCriticalSection(&g_uac);
 			delete dst;			
 			pWnd->ShowTestLogData+="400 --------> \r\n";
-			AfxMessageBox("缺少Variable字段");
+			AfxMessageBox("缺少CmdType字段");
 			return -1;
-		}						
-		string temp = strXML.substr(VariableStart+10,VariableEnd-VariableStart-10);
-		strcpy(var,temp.c_str());
-		temp.erase(0,temp.length());
-		osip_body_free(XMLbody);				
-		if (strcmp(var,"PTZCommand")==0)
+		}					
+		string temp = strXML.substr(CmdTypeStart+9,CmdTypeEnd-CmdTypeStart-9);
+		strcpy(CmdType,temp.c_str());		
+		if (strcmp(CmdType,"DeviceControl")==0)
 		{
 			m_Type = PTZ;
 			pWnd->CurStatusID.nSataus=PTZ;
 			pWnd->ShowTestLogData=" <---------  DO  \r\n";		
 			pWnd->ShowTestLogTitle="PTZ Test";
 		}
-		else if (strcmp(var,"PresetList")==0 )
+		else if (strcmp(CmdType,"PresetList")==0 )
 		{
-			if ((VariableStart = strXML.find("<ReceivePresetNum>", 0)) == string::npos)
+			if ((CmdTypeStart = strXML.find("<ReceivePresetNum>", 0)) == string::npos)
 			{
 				char *dst = new char[MAXBUFSIZE];
 				Sip400(&dst, m_SipMsg.msg);
@@ -250,7 +238,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 				AfxMessageBox("预置位查询，缺少ReceivePresetNum字段");
 				return 1;
 			}
-			if ( (VariableEnd = strXML.find("</ReceivePresetNum>",VariableStart+1)) ==string::npos)
+			if ( (CmdTypeEnd = strXML.find("</ReceivePresetNum>",CmdTypeStart+1)) ==string::npos)
 			{
 				char *dst=new char[MAXBUFSIZE];
 				Sip400(&dst,m_SipMsg.msg);
@@ -264,129 +252,41 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 				AfxMessageBox("预置位查询，缺少ReceivePresetNum字段");
 				return 1;
 			}
-			temp = strXML.substr(VariableStart+18,VariableEnd-VariableStart-18);
+			temp = strXML.substr(CmdTypeStart+18,CmdTypeEnd-CmdTypeStart-18);
 			beginIndex=atoi(temp.c_str());
 			m_Type=PreBitSet;		
 			pWnd->CurStatusID.nSataus=PreBitSet;
 			pWnd->ShowTestLogData=" <---------  DO  \r\n";		
 			pWnd->ShowTestLogTitle="预置位查询";
 		}
-		else if (strcmp(var,"FileList")==0)
-		{
-			if ((VariableStart = strXML.find("<BeginTime>", 0)) == string::npos)
-			{
-				char *dst = new char[MAXBUFSIZE];
-				Sip400(&dst, m_SipMsg.msg);
-				UA_Msg uac_sendtemp;
-				strcpy(uac_sendtemp.data, dst);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp);
-				LeaveCriticalSection(&g_uac);
-				delete dst;
-				pWnd->ShowTestLogData += "400 --------> \r\n";
-				AfxMessageBox("录像查询缺少，BeginTime");
-				return 1;
-			}
-			if ((VariableStart = strXML.find("<BeginTime>", 0)) == string::npos)
-			{
-				char *dst = new char[MAXBUFSIZE];
-				Sip400(&dst, m_SipMsg.msg);
-				UA_Msg uac_sendtemp;
-				strcpy(uac_sendtemp.data, dst);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp);
-				LeaveCriticalSection(&g_uac);
-				delete dst;
-				pWnd->ShowTestLogData += "400 --------> \r\n";
-				AfxMessageBox("录像查询缺少，BeginTime");
-				return 1;
-			}
-			if ((VariableStart = strXML.find("<BeginTime>", 0)) == string::npos)
-			{
-				char *dst = new char[MAXBUFSIZE];
-				Sip400(&dst, m_SipMsg.msg);
-				UA_Msg uac_sendtemp;
-				strcpy(uac_sendtemp.data, dst);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp);
-				LeaveCriticalSection(&g_uac);
-				delete dst;
-				pWnd->ShowTestLogData += "400 --------> \r\n";
-				AfxMessageBox("录像查询缺少，BeginTime");
-				return 1;
-			}
-			if ((VariableStart = strXML.find("<EndTime>", 0)) == string::npos)
-			{
-				char *dst = new char[MAXBUFSIZE];
-				Sip400(&dst, m_SipMsg.msg);
-				UA_Msg uac_sendtemp;
-				strcpy(uac_sendtemp.data, dst);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp);
-				LeaveCriticalSection(&g_uac);
-				delete dst;
-				pWnd->ShowTestLogData += "400 --------> \r\n";
-				AfxMessageBox("录像查询缺少，EndTime");
-				return 1;
-			}
-					
-			if ((VariableStart = strXML.find("<MaxFileNum>", 0)) == string::npos)
-			{
-				char *dst = new char[MAXBUFSIZE];
-				Sip400(&dst, m_SipMsg.msg);
-				UA_Msg uac_sendtemp;
-				strcpy(uac_sendtemp.data, dst);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp);
-				LeaveCriticalSection(&g_uac);
-				delete dst;
-				pWnd->ShowTestLogData += "400 --------> \r\n";
-				AfxMessageBox("录像查询缺少，MaxFileNum");
-				return 1;
-			}
-			m_Type=HistoryQuery;
-			pWnd->ShowTestLogData="<--------- DO\r\n";			
-			pWnd->ShowTestLogTitle="History Video Query Test";
-		}
-		else if (strcmp(var,"VOD")==0)
+		else if (strcmp(CmdType,"VOD")==0)
 		{
 			m_Type = HistoryPlay;			
 			pWnd->ShowTestLogData="<---------- DO\r\n";		
 			pWnd->ShowTestLogTitle="Get History Video URL Test";
 		}
-		else if (strcmp(var,"DeviceInfo")==0)//DeviceInfQuery
-		{
-			m_Type=DeviceInfQuery;			
-			pWnd->ShowTestLogData="<--------- DO\r\n";			
-			pWnd->ShowTestLogTitle="Device Query Test";
-		}
-		else if (strcmp(var,"ItemList")==0)//DeviceCatalogInfQuery
-		{
-			m_Type = CatalogQuery;			
-			pWnd->ShowTestLogData="<--------- DO\r\n";			
-			pWnd->ShowTestLogTitle="Device Catalog Query Test";
-		}
-		else if (strcmp(var,"BandWidth")==0)
+		
+		else if (strcmp(CmdType,"BandWidth")==0)
 		{
 			m_Type=FlowQuery;			
 			pWnd->ShowTestLogData="<--------- DO\r\n";			
 			pWnd->ShowTestLogTitle="Catalog Query Test";
 		}
-		else if (strcmp(var,"EncoderSet")==0 )
+		else if (strcmp(CmdType,"EncoderSet")==0 )
 		{
 			m_Type = EncoderSet;
 			pWnd->CurStatusID.nSataus = EncoderSet;
 			pWnd->ShowTestLogData=" <--------  DO \r\n";		
 			pWnd->ShowTestLogTitle="Encoder Set Test";
 		}
-		else if (strcmp(var,"TimeSet")==0 )
+		else if (strcmp(CmdType,"TimeSet")==0 )
 		{
 			m_Type = TimeSet;
 			pWnd->CurStatusID.nSataus = TimeSet;
 			pWnd->ShowTestLogData=" <--------  DO \r\n";		
 			pWnd->ShowTestLogTitle="Time Set Test";
 		}
-		else if (strcmp(var,"RealTimeKeepLive")==0 )
+		else if (strcmp(CmdType,"RealTimeKeepLive")==0 )
 		{		
 			pWnd->bRealTimeFlag = TRUE;
 			char *dst=new char[MAXBUFSIZE];
@@ -399,11 +299,219 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			delete dst;
 			return 0;			
 		}
-		/***********************************************************************/
-		/*这里是各种"DO"请求的XML解析 writed by Bsp Lee                          */
-		/*CaptureImage */
-		/***********************************************************************/
-		else if (strcmp(var, "CaptureImage") == 0)
+
+		/****************************************/
+		/*add some function for GB28181**********/
+		/****************************************/
+		else if (strcmp(CmdType,"RecordInfo")==0)
+		{
+			//m_Type=HistoryQuery;
+			char *dst = new char[MAXBUFSIZE];
+			Sip200OK(&dst, m_SipMsg.msg);
+			UA_Msg uac_sendtemp;
+			strcpy(uac_sendtemp.data, dst);
+			EnterCriticalSection(&g_uac);
+			uac_sendqueue.push(uac_sendtemp);
+			LeaveCriticalSection(&g_uac);
+
+			//记录ToTag
+			osip_uri_param_t *Totag;
+			osip_to_get_tag(m_SipMsg.msg->to, &Totag);
+			//准备发送设备信息
+			Sleep(500);
+			char *xml = new char[XMLSIZE];
+			CreateXMLVideoAudioQueryNode(&xml);
+			char *dest = new char[MAXBUFSIZE];
+			SipVideoAudioQueryXml(&dest, pWnd->m_InfoServer, pWnd->m_InfoClient, xml, Totag);
+			strcpy(uac_sendtemp.data, dest);
+			EnterCriticalSection(&g_uac);
+			uac_sendqueue.push(uac_sendtemp);
+			LeaveCriticalSection(&g_uac);
+			delete dest;
+			delete xml;
+			pWnd->ShowTestLogData += "200 OK ----------->\r\n";
+			return 0;
+			pWnd->ShowTestLogData="<--------- DO\r\n";			
+			pWnd->ShowTestLogTitle="History Video Query Test";
+		}
+		else if (strcmp(CmdType,"DeviceInfo")==0)//DeviceInfQuery
+		{
+			char *dst = new char[MAXBUFSIZE];
+			Sip200OK(&dst, m_SipMsg.msg);
+			UA_Msg uac_sendtemp;
+			strcpy(uac_sendtemp.data, dst);
+			EnterCriticalSection(&g_uac);
+			uac_sendqueue.push(uac_sendtemp);
+			LeaveCriticalSection(&g_uac);
+			
+			//记录ToTag
+			osip_uri_param_t *Totag;
+			osip_to_get_tag(m_SipMsg.msg->to, &Totag);
+			//准备发送设备信息
+			Sleep(500);
+			char *xml = new char[XMLSIZE];
+			CreateXMLDeviceInfoQueryNode(&xml);
+			char *dest = new char[MAXBUFSIZE];
+			SipDeviceInfoQueryXml(&dest, pWnd->m_InfoServer, pWnd->m_InfoClient, xml, Totag);
+			strcpy(uac_sendtemp.data, dest);
+			EnterCriticalSection(&g_uac);
+			uac_sendqueue.push(uac_sendtemp);
+			LeaveCriticalSection(&g_uac);
+			delete dest;
+			delete xml;
+			pWnd->ShowTestLogData += "200 OK ----------->\r\n";
+			return 0;
+		}
+		else if (strcmp(CmdType,"Catalog")==0)//DeviceCatalogInfQuery
+		{
+			string st = buffer;
+			int index = st.find("<DeviceID>", 0);
+			if (index == string::npos)
+			{
+				AfxMessageBox("目录查询，缺少DeviceID字段！", MB_OK | MB_ICONERROR);
+			}
+			int index2 = st.find("</DeviceID>");
+			if (index2 == string::npos)
+			{
+				AfxMessageBox("目录查询，缺少/DeviceID字段！", MB_OK | MB_ICONERROR);
+			}
+			string DeviceID = st.substr(index + 10, index2 - index - 10);
+			if (DeviceID.compare("") == 0)
+			{
+				AfxMessageBox("目录查询，DeviceID字段为空！", MB_OK | MB_ICONERROR);
+			}
+			//252000001199000001 == pWnd->m_InfoClient.UserAddress
+			if (DeviceID.compare(pWnd->m_InfoClient.UserAddress) == 0)//UAC平台目录节点
+			{
+				char *dst = new char[MAXBUFSIZE];
+				Sip200OK(&dst, m_SipMsg.msg);
+				UA_Msg uac_sendtemp;
+				strcpy(uac_sendtemp.data, dst);
+				EnterCriticalSection(&g_uac);
+				uac_sendqueue.push(uac_sendtemp);
+				LeaveCriticalSection(&g_uac);
+
+				//记录ToTag
+				osip_uri_param_t *Totag;
+				osip_to_get_tag(m_SipMsg.msg->to, &Totag);
+				//准备发送设备信息
+				Sleep(500);
+				char *xml = new char[XMLSIZE];
+				CreateXMLCatalogQueryNote(&xml);
+				char *dest = new char[MAXBUFSIZE];
+				SipCatalogQueryXml(&dest, pWnd->m_InfoServer, pWnd->m_InfoClient, xml, Totag);
+				strcpy(uac_sendtemp.data, dest);
+				EnterCriticalSection(&g_uac);
+				uac_sendqueue.push(uac_sendtemp);
+				LeaveCriticalSection(&g_uac);
+				delete dest;
+				delete xml;
+			}
+			pWnd->ShowTestLogData += "200 OK ----------->\r\n";
+			return 0;
+		}
+		else if (strcmp(CmdType, "DeviceStatus") == 0)
+		{
+			string st = buffer;
+			int index = st.find("<DeviceID>", 0);
+			if (index == string::npos)
+			{
+				AfxMessageBox("目录查询，缺少DeviceID字段！", MB_OK | MB_ICONERROR);
+			}
+			int index2 = st.find("</DeviceID>");
+			if (index2 == string::npos)
+			{
+				AfxMessageBox("目录查询，缺少/DeviceID字段！", MB_OK | MB_ICONERROR);
+			}
+			string DeviceID = st.substr(index + 10, index2 - index - 10);
+			if (DeviceID.compare("") == 0)
+			{
+				AfxMessageBox("目录查询，DeviceID字段为空！", MB_OK | MB_ICONERROR);
+			}
+			char *dst = new char[MAXBUFSIZE];
+			Sip200OK(&dst, m_SipMsg.msg);
+			UA_Msg uac_sendtemp;
+			strcpy(uac_sendtemp.data, dst);
+			EnterCriticalSection(&g_uac);
+			uac_sendqueue.push(uac_sendtemp);
+			LeaveCriticalSection(&g_uac);
+
+			//记录ToTag
+			osip_uri_param_t *Totag;
+			osip_to_get_tag(m_SipMsg.msg->to, &Totag);
+			//准备发送设备信息
+			Sleep(500);
+			char *xml = new char[XMLSIZE];
+			CreateXMLDeviceStatusQueryNode(&xml); 
+			char *dest = new char[MAXBUFSIZE];
+			SipDeviceStatusQueryXml(&dest, pWnd->m_InfoServer, pWnd->m_InfoClient, xml, Totag);
+			//pWnd->SendData(dest);
+			strcpy(uac_sendtemp.data, dest);
+			EnterCriticalSection(&g_uac);
+			uac_sendqueue.push(uac_sendtemp);
+			LeaveCriticalSection(&g_uac);
+			//pWnd->ShowSendData(dest);
+			delete dest;
+			delete xml;
+			pWnd->ShowTestLogData += "200 OK ----------->\r\n";
+			return 0;
+		}
+		else if (strcmp(CmdType, "Alarm") == 0)//报警事件通知与分析
+		{
+			char *dst = new char[MAXBUFSIZE];
+			Sip200OK(&dst, m_SipMsg.msg);
+			UA_Msg uac_sendtemp;
+			strcpy(uac_sendtemp.data, dst);
+			EnterCriticalSection(&g_uac);
+			uac_sendqueue.push(uac_sendtemp);
+			LeaveCriticalSection(&g_uac);
+
+			Sleep(500);
+			HWND   hnd = ::FindWindow(NULL, _T("UAC"));
+			CUACDlg*  pWnd = (CUACDlg*)CWnd::FromHandle(hnd); 
+			char *Xml = new char[strlen(strXML.c_str())];
+			strcpy(Xml, strXML.c_str());
+			SipAlarmEventNoticeDistribute(&dst, pWnd->m_InfoServer, pWnd->m_InfoClient, Xml);
+			strcpy(uac_sendtemp.data, dst);
+			EnterCriticalSection(&g_uac);
+			uac_sendqueue.push(uac_sendtemp);
+			LeaveCriticalSection(&g_uac);
+
+			delete dst;
+			return 0;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+	/***********************************************************************/
+	/*这里是各种"DO"请求的XML解析 writed by Bsp Lee                          */
+	/*CaptureImage */
+	/***********************************************************************/
+	else if (strcmp(m_SipMsg.msg->sip_method, "DO") == 0 && m_SipMsg.msg->status_code == 0)
+	{
+		char Variable[50];
+		string::size_type CmdTypeStart;
+		string::size_type CmdTypeEnd;
+		if (((CmdTypeStart = strXML.find("<Variable>", 0)) == string::npos)
+			|| (CmdTypeEnd = strXML.find("</Variable>", CmdTypeStart + 1)) == string::npos)
+		{
+			char *dst = new char[MAXBUFSIZE];
+			Sip400(&dst, m_SipMsg.msg);
+			UA_Msg uac_sendtemp;
+			strcpy(uac_sendtemp.data, dst);
+			EnterCriticalSection(&g_uac);
+			uac_sendqueue.push(uac_sendtemp);
+			LeaveCriticalSection(&g_uac);
+			delete dst;
+			pWnd->ShowTestLogData += "400 --------> \r\n";
+			AfxMessageBox("缺少Variable字段");
+			return -1;
+		}
+		string temp = strXML.substr(CmdTypeStart + 10, CmdTypeEnd - CmdTypeStart - 10);
+		strcpy(Variable, temp.c_str());
+		if (strcmp(Variable, "CaptureImage") == 0)
 		{
 			m_Type = CaptureImage;
 			pWnd->ShowTestLogData = "<---------- DO\r\n";
@@ -414,7 +522,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			return 0;
 		}
 	}
-//receive subscribe message from sever
+//receive subscribe message from sever,订阅和通知，使用SUBSCRIBE方法
 	else if (MSG_IS_SUBSCRIBE(m_SipMsg.msg))//这里有报警预定的UAC处理
 	{
 		m_Type = Alarm;		
@@ -428,7 +536,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 	{
 		if ( !SipVerify(pWnd->m_InfoServer,pWnd->m_InfoClient,m_SipMsg.msg,1))
 		{
-			AfxMessageBox("KeepAlive From or To variable is error",MB_OK|MB_ICONERROR);
+			AfxMessageBox("KeepAlive From or To CmdType is error",MB_OK|MB_ICONERROR);
 			return 0;
 		}
 		if (m_SipMsg.msg->from->gen_params.nb_elt==0 )
@@ -470,7 +578,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 		}
 		if (m_SipMsg.msg->from->gen_params.nb_elt==0 )
 		{
-			AfxMessageBox("from variable must include tag",MB_OK|MB_ICONEXCLAMATION);
+			AfxMessageBox("from CmdType must include tag",MB_OK|MB_ICONEXCLAMATION);
 			return 0;
 		}
 		osip_uri_param_t *h;
@@ -542,7 +650,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			}
 			if (m_SipMsg.msg->from->gen_params.nb_elt==0 )
 			{
-				AfxMessageBox("from variable must include tag",MB_OK|MB_ICONEXCLAMATION);
+				AfxMessageBox("from CmdType must include tag",MB_OK|MB_ICONEXCLAMATION);
 				return 0;
 			}
 			osip_uri_param_t *h;
@@ -565,39 +673,56 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 	case Register://注册
 		{	
 			cseq=m_SipMsg.msg->cseq;
+			osip_header * expires = NULL;
+			osip_message_get_expires(m_SipMsg.msg, 0, &expires);
 			if ( m_SipMsg.msg->status_code==200)
 			{
-				pWnd->ShowRecvData("\t\t-----注册成功-----\r\n");
-				pWnd->ShowTestLogData += "<------------ 200 OK\r\n";
-				//注册成功开启保活
-				pWnd->bKeepAlive = TRUE;
-				//osip_header_t *timeIntervalTemp = NULL;
-				//osip_message_get_expires(m_SipMsg.msg, 0, &timeIntervalTemp);
-				//char * expiresName = timeIntervalTemp->hname;
-				//int timeInterval = atoi(timeIntervalTemp->hvalue);
-				int timeInterval = atoi(Common::EXPIRES_VALUE) / 3 * 1000;
-				pWnd->SetTimer(1, timeInterval, NULL);//成功后需要开启心跳信息保活,定时标志为1
+				if (strcmp(expires->hvalue, "0") != 0 )//注册成功操作
+				{
+					pWnd->ShowRecvData("\t\t-----注册成功-----\r\n");
+					pWnd->ShowTestLogData += "<------------ 200 OK\r\n";
+					//注册成功开启保活
+					pWnd->bKeepAlive = TRUE;
 
-				char *dst=new char[XMLSIZE];				
-				char *dstNodeMsg=new char[MAXBUFSIZE];
+					int timeInterval = atoi(Common::EXPIRES_VALUE) / 3 * 1000;
+					pWnd->SetTimer(1, timeInterval, NULL);//成功后需要开启心跳信息保活,定时标志为1
 
-				//根据测试文档要求，注册成功后需产生设备节点信息，然后发送给所有目的联网单元
-				XmlNodeCreate(&dst);
-				SipNodeXmlMsg(&dstNodeMsg,pWnd->m_InfoServer,pWnd->m_InfoClient,dst,m_SipMsg.msg);				
-				UA_Msg uac_sendtemp;
-				strcpy(uac_sendtemp.data,dstNodeMsg);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp);
-				LeaveCriticalSection(&g_uac);
-				pWnd->ShowSendData(dstNodeMsg);
+					char *dst = new char[XMLSIZE];
+					char *dstNodeMsg = new char[MAXBUFSIZE];
 
-				Common::DEVICECATALOG_COUNT = 2;//第一次发送设备目录结构
-				delete dst;					
-				delete dstNodeMsg;				
-				//update log
-				pWnd->ShowTestLogData+="NOTIFY---------->\r\n";	
-				pWnd->EnableWindow(IDC_BTN_RESULT,TRUE);	
-				pWnd->m_PSTVSetTime.GetDlgItem(IDC_BUTTON_PSTVTIME)->EnableWindow(TRUE);
+					//根据测试文档要求，注册成功后需产生设备节点信息，然后发送给所有目的联网单元
+					XmlNodeCreate(&dst);
+					SipNodeXmlMsg(&dstNodeMsg, pWnd->m_InfoServer, pWnd->m_InfoClient, dst, m_SipMsg.msg);
+					UA_Msg uac_sendtemp;
+					strcpy(uac_sendtemp.data, dstNodeMsg);
+					EnterCriticalSection(&g_uac);
+					uac_sendqueue.push(uac_sendtemp);
+					LeaveCriticalSection(&g_uac);
+					pWnd->ShowSendData(dstNodeMsg);
+
+					Common::DEVICECATALOG_COUNT = 2;//第一次发送设备目录结构
+					delete dst;
+					delete dstNodeMsg;
+					//update log
+					pWnd->ShowTestLogData += "NOTIFY---------->\r\n";
+					pWnd->EnableWindow(IDC_BTN_SIP_QUIT,TRUE); //打开注销按钮
+					pWnd->EnableWindow(IDC_BTN_RESULT, TRUE);
+					pWnd->m_PSTVSetTime.GetDlgItem(IDC_BUTTON_PSTVTIME)->EnableWindow(TRUE);
+				
+					//注册成功后开始校验时间
+					osip_uri_param_t *date;
+					osip_message_get_date(m_SipMsg.msg, 0, &date);
+					pWnd->m_PSTVSetTime.GetDlgItem(IDC_EDIT_NGTVTIME)->SetWindowTextA(date->gvalue);
+				}
+				else //注销成功操作
+				{
+					pWnd->bKeepAlive = FALSE;//注销后关闭保活
+
+					pWnd->EnableWindow(IDC_BTN_SIP_QUIT, FALSE); //注销按钮不可用
+					pWnd->EnableWindow(IDC_BTN_SIP_REGISTER, TRUE);//注册按钮可用
+					pWnd->m_TCPSocket.ShutDown();
+					pWnd->m_TCPSocket.Close();
+				}
 			}
 			else if(m_SipMsg.msg->status_code==400)
 			{	
@@ -612,10 +737,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			{	
 				pWnd->ShowRecvData("\t\t-----注册失败(没有携带权签信息)----\r\n");
 				pWnd->ShowTestLogData+="<--------  401\r\n";
-// 				pWnd->bKeepAlive=FALSE;
-// 				pWnd->KillTimer(3);	
-// 				pWnd->EnableWindow(IDC_BTN_SIP_REGISTER,TRUE);
-// 				pWnd->EnableWindow(IDC_BTN_RESULT,FALSE);
+
 				string strbuf=buffer;
 				int index=strbuf.find("realm");
 				if (index==string::npos)
@@ -646,18 +768,10 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 				index1=strbuf.find('"',index);
 				index2=strbuf.find('"',index1+1);
 				g_authInfo.opaque=strbuf.substr(index1+1,index2-index1-1);
-// 				index=strbuf.find("qop");
-// 				if (index==string::npos)
-// 				{
-// 					AfxMessageBox("缺少qop信息！",MB_OK|MB_ICONERROR);
-// 					return 0;
-// 				}
-// 				index1=strbuf.find('"',index);
-// 				index2=strbuf.find('"',index1+1);
-// 				g_authInfo.qop=strbuf.substr(index1+1,index2-index1-1);
+
 				char *data=new char[MAXBUFSIZE];
 				memset(data,0,MAXBUFSIZE);
-				SipRegisterWithAuthCreate(&data,pWnd->m_InfoServer,pWnd->m_InfoClient,m_SipMsg.msg);
+				SipRegisterOrQuitWithAuthCreate(&data,pWnd->m_InfoServer,pWnd->m_InfoClient,m_SipMsg.msg);
 				UA_Msg uac_sendtemp;
 				strcpy(uac_sendtemp.data,data);
 				EnterCriticalSection(&g_uac);
@@ -679,14 +793,14 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 		{
 			if (m_SipMsg.msg->status_code==200)
 			{
-				if (strXML.find("<Variable>", 0) == string::npos)
+				if (strXML.find("<CmdType>", 0) == string::npos)
 				{
-					AfxMessageBox("推送缺少Variable字段！", MB_OK | MB_ICONEXCLAMATION);
+					AfxMessageBox("推送缺少CmdType字段！", MB_OK | MB_ICONEXCLAMATION);
 					return 1;
 				}
-				if (strXML.find("</Variable>", 0) == string::npos)
+				if (strXML.find("</CmdType>", 0) == string::npos)
 				{
-					AfxMessageBox("推送缺少/Variable字段！", MB_OK | MB_ICONEXCLAMATION);
+					AfxMessageBox("推送缺少/CmdType字段！", MB_OK | MB_ICONEXCLAMATION);
 					return 1;
 				}
 				//设备目录的消息UAS返回
@@ -697,36 +811,6 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 
 					char *dst = new char[XMLSIZE];
 					char *dstNodeMsg = new char[MAXBUFSIZE];
-					/*
-					if (Common::DEVICECATALOG_COUNT == 2)//第二次推送：编码器下的模拟相机信息技术
-					{
-						XmlNodeCreate1(&dst);
-						SipNodeXmlMsg(&dstNodeMsg, pWnd->m_InfoServer, pWnd->m_InfoClient, dst, m_SipMsg.msg);
-						UA_Msg uac_sendtemp;
-						strcpy(uac_sendtemp.data, dstNodeMsg);
-						EnterCriticalSection(&g_uac);
-						uac_sendqueue.push(uac_sendtemp);
-						LeaveCriticalSection(&g_uac);
-
-						Common::DEVICECATALOG_COUNT = 3;
-						delete dst;
-						delete dstNodeMsg;
-					}
-					else if (Common::DEVICECATALOG_COUNT == 3)//第三次推送：DVR下所连接的模拟相机信息技术
-					{
-						XmlNodeCreate2(&dst);
-						SipNodeXmlMsg(&dstNodeMsg, pWnd->m_InfoServer, pWnd->m_InfoClient, dst, m_SipMsg.msg);
-						UA_Msg uac_sendtemp;
-						strcpy(uac_sendtemp.data, dstNodeMsg);
-						EnterCriticalSection(&g_uac);
-						uac_sendqueue.push(uac_sendtemp);
-						LeaveCriticalSection(&g_uac);
-
-						Common::DEVICECATALOG_COUNT = 1;
-						delete dst;
-						delete dstNodeMsg;
-					}
-					*/
 				}
 				//事件报警通知的消息UAS返回
 				if (strXML.find("AlarmNotify", 0) != string::npos)
@@ -819,7 +903,17 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			char *dstPTZMsg=new char[MAXBUFSIZE];
 			char *XMLTemp = new char[MAXBUFSIZE];
 			strcpy(XMLTemp, strXML.c_str());
-			if( XmlPTZCreate(&dst, XMLTemp) )
+			{
+				Sip200OK(&dstPTZMsg, m_SipMsg.msg);
+				UA_Msg uac_sendtemp;
+				strcpy(uac_sendtemp.data, dstPTZMsg);
+				EnterCriticalSection(&g_uac);
+				uac_sendqueue.push(uac_sendtemp);
+				LeaveCriticalSection(&g_uac);
+				pWnd->ShowTestLogData += "200  OK ------->\r\n";
+			}
+
+			/*if( XmlPTZCreate(&dst, XMLTemp) )
 			{
 				Sip200Xml(&dstPTZMsg,m_SipMsg.msg,dst);
 				UA_Msg uac_sendtemp;
@@ -838,7 +932,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 				uac_sendqueue.push(uac_sendtemp);
 				LeaveCriticalSection(&g_uac);
 				pWnd->ShowTestLogData+="400  ------->\r\n";
-			}
+			}*/
 			delete dst;
 			delete dstPTZMsg;
 			delete XMLTemp;
@@ -873,245 +967,136 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			pWnd->ShowTestLogData+="200  OK ------->\r\n";	
 		}
 		break;
-	case HistoryQuery:
-		{
-			char *xml=new char[XMLSIZE];		
+	//case HistoryQuery:
+	//{
+		//char *xml = new char[XMLSIZE];
 
-			CTime beginTime;
-			CTime endTime;
-			int MaxFileNum;
-			int nYear, nMonth, nDate, nHour, nMin, nSec;
-			string tem;
-			string temcreatetime;
-			string temendtime;
-			int fromidex=0;
-			int toindex=0;
-			int variableStart = strXML.find("<BeginTime>", 0);
-			int variableEnd = strXML.find("</BeginTime>", 0);
-			string begintime = strXML.substr(variableStart + 11, variableEnd - variableStart - 11);
-			if ((variableStart == string::npos) || (variableEnd == string::npos)
-				|| (strcmp(begintime.c_str(), "") == 0))
-			{
-				char *dst = new char[MAXBUFSIZE];
-				Sip400(&dst, m_SipMsg.msg);
-				UA_Msg uac_sendtemp;
-				strcpy(uac_sendtemp.data, dst);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp);
-				LeaveCriticalSection(&g_uac);
-				delete dst;
-				pWnd->ShowTestLogData += "400 --------> \r\n";
-				AfxMessageBox("缺少BeginTime字段或者BeginTime字段没有信息...");
-				return 1;
-			}
-			else
-			{
-				sscanf(begintime.c_str(), "%d-%d-%dT%d:%d:%dZ", &nYear, &nMonth, &nDate, &nHour, &nMin, &nSec);;
-				
-				CTime begin(nYear, nMonth, nDate, nHour, nMin, nSec);
-				beginTime = begin;
-			}
+		//CTime beginTime;
+		//CTime endTime;
+		//int MaxFileNum;
+		//int nYear, nMonth, nDate, nHour, nMin, nSec;
+		//string tem;
+		//string temcreatetime;
+		//string temendtime;
+		//int fromidex = 0;
+		//int toindex = 0;
+		//int CmdTypeStart = strXML.find("<StartTime>", 0);
+		//int CmdTypeEnd = strXML.find("</StartTime>", 0);
+		//string begintime = strXML.substr(CmdTypeStart + 11, CmdTypeEnd - CmdTypeStart - 11);
+		//if ((CmdTypeStart == string::npos) || (CmdTypeEnd == string::npos)
+		//	|| (strcmp(begintime.c_str(), "") == 0))
+		//{
+		//	char *dst = new char[MAXBUFSIZE];
+		//	Sip400(&dst, m_SipMsg.msg);
+		//	UA_Msg uac_sendtemp;
+		//	strcpy(uac_sendtemp.data, dst);
+		//	EnterCriticalSection(&g_uac);
+		//	uac_sendqueue.push(uac_sendtemp);
+		//	LeaveCriticalSection(&g_uac);
+		//	delete dst;
+		//	pWnd->ShowTestLogData += "400 --------> \r\n";
+		//	AfxMessageBox("缺少BeginTime字段或者BeginTime字段没有信息...");
+		//	return 1;
+		//}
+		//else
+		//{
+		//	sscanf(begintime.c_str(), "%d-%d-%dT%d:%d:%dZ", &nYear, &nMonth, &nDate, &nHour, &nMin, &nSec);;
+
+		//	CTime begin(nYear, nMonth, nDate, nHour, nMin, nSec);
+		//	beginTime = begin;
+		//}
 
 
-			variableStart = strXML.find("<EndTime>", 0);
-			variableEnd = strXML.find("</EndTime>", 0);
-			string endtime = strXML.substr(variableStart + 9, variableEnd - variableStart - 9 );
-			if ((variableStart == string::npos) || (variableEnd == string::npos)
-				|| (strcmp(endtime.c_str(), "") == 0))
-			{
-				char *dst = new char[MAXBUFSIZE];
-				Sip400(&dst, m_SipMsg.msg);
-				UA_Msg uac_sendtemp;
-				strcpy(uac_sendtemp.data, dst);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp);
-				LeaveCriticalSection(&g_uac);
-				delete dst;
-				pWnd->ShowTestLogData += "400 --------> \r\n";
-				AfxMessageBox("缺少endtime字段或者EndTime字段没有信息...");
-				return 1;
-			}
-			else
-			{
-				sscanf(endtime.c_str(), "%d-%d-%dT%d:%d:%dZ", &nYear, &nMonth, &nDate, &nHour, &nMin, &nSec);;
+		//CmdTypeStart = strXML.find("<EndTime>", 0);
+		//CmdTypeEnd = strXML.find("</EndTime>", 0);
+		//string endtime = strXML.substr(CmdTypeStart + 9, CmdTypeEnd - CmdTypeStart - 9);
+		//if ((CmdTypeStart == string::npos) || (CmdTypeEnd == string::npos)
+		//	|| (strcmp(endtime.c_str(), "") == 0))
+		//{
+		//	char *dst = new char[MAXBUFSIZE];
+		//	Sip400(&dst, m_SipMsg.msg);
+		//	UA_Msg uac_sendtemp;
+		//	strcpy(uac_sendtemp.data, dst);
+		//	EnterCriticalSection(&g_uac);
+		//	uac_sendqueue.push(uac_sendtemp);
+		//	LeaveCriticalSection(&g_uac);
+		//	delete dst;
+		//	pWnd->ShowTestLogData += "400 --------> \r\n";
+		//	AfxMessageBox("缺少endtime字段或者EndTime字段没有信息...");
+		//	return 1;
+		//}
+		//else
+		//{
+		//	sscanf(endtime.c_str(), "%d-%d-%dT%d:%d:%dZ", &nYear, &nMonth, &nDate, &nHour, &nMin, &nSec);;
 
-				CTime end(nYear, nMonth, nDate, nHour, nMin, nSec);
-				endTime = end;
+		//	CTime end(nYear, nMonth, nDate, nHour, nMin, nSec);
+		//	endTime = end;
+		//}
 
-			}
-
-			variableStart = strXML.find("<MaxFileNum>", 0);
-			variableEnd = strXML.find("</MaxFileNum>", 0);
-			string maxFileNum = strXML.substr(variableStart + 12, variableEnd - variableStart - 12);
-			if ((variableStart == string::npos) || (variableEnd == string::npos)
-				|| (strcmp(maxFileNum.c_str(), "") == 0))
-			{
-				char *dst = new char[MAXBUFSIZE];
-				Sip400(&dst, m_SipMsg.msg);
-				UA_Msg uac_sendtemp;
-				strcpy(uac_sendtemp.data, dst);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp);
-				LeaveCriticalSection(&g_uac);
-				delete dst;
-				pWnd->ShowTestLogData += "400 --------> \r\n";
-				AfxMessageBox("缺少maxFileNum字段或者maxFileNum字段没有信息...");
-				return 1;
-			}
-			else
-			{
-				MaxFileNum = atoi(maxFileNum.c_str());
-			}
-
-			//CreateXMLVideoQuery(&xml);
-			/*
-			if (endIndex*6>HistoryVideoList.size())
-			{
-				endIndex=HistoryVideoList.size()/6;
-			}
-			if(endIndex-beginIndex<5)CreateXMLVideoQuery_c(&xml,beginIndex,endIndex);
-			else CreateXMLVideoQuery_c(&xml,beginIndex,beginIndex+4);
-			*/
-
-			for (int i = 2; i < HistoryVideoList.size(); i +=6)
-			{
-				//截取列表中每一个时间，与传入的时间作比较，得到需要发送的历史流列表
-				tem = HistoryVideoList[i];
-				variableStart = tem.find("<CreationTime>", 0);
-				variableEnd = tem.find("</CreationTime>", 0);
-				temcreatetime = tem.substr(variableStart + 14, variableEnd - variableStart - 14);
-				sscanf(temcreatetime.c_str(), "%d - %d - %dT%d:%d : %dZ", &nYear, &nMonth, &nDate, &nHour, &nMin, &nSec);
-				CTime tempbeginTime(nYear, nMonth, nDate, nHour, nMin, nSec);
-				if (beginTime > tempbeginTime)
-				{
-					fromidex++;
-				}
-				//分别得到起始位置
-				tem = HistoryVideoList[i+1];
-				variableStart = tem.find("<LastWriteTime>", 0);
-				variableEnd = tem.find("</LastWriteTime>", 0);
-				temendtime = tem.substr(variableStart + 15, variableEnd - variableStart - 15);	
-				sscanf(temendtime.c_str(), "%d - %d - %dT%d:%d : %dZ", &nYear, &nMonth, &nDate, &nHour, &nMin, &nSec);
-				CTime tempendTime(nYear, nMonth, nDate, nHour, nMin, nSec);
-				if (endTime > tempendTime)
-				{
-					toindex++;
-				}
-
-			}
-/*			
-			if (MaxFileNum * 6>HistoryVideoList.size())
-			{
-				MaxFileNum = HistoryVideoList.size() / 6;
-			}
-*/
-
-			if (toindex - fromidex<MaxFileNum)
-				CreateXMLVideoQuery_c(&xml, fromidex, toindex);
-			else 
-				CreateXMLVideoQuery_c(&xml, fromidex, fromidex + MaxFileNum);
-			char *dest=new char[MAXBUFSIZE];
-			Sip200Xml(&dest,m_SipMsg.msg,xml);				
-			//pWnd->SendData(dest);
-			UA_Msg uac_sendtemp;
-			strcpy(uac_sendtemp.data,dest);
-			EnterCriticalSection(&g_uac);
-			uac_sendqueue.push(uac_sendtemp);
-			LeaveCriticalSection(&g_uac);		
-			//pWnd->ShowSendData(dest);
-			delete dest;
-			delete xml;			
-			//update log
-			pWnd->ShowTestLogData+="200 OK ----------->\r\n";
-		}
-		break;
-	case CatalogQuery://目录节点查询
-		{
-			string st=buffer;
-			int index = st.find("<Address>",0);
-			if (index==string::npos)
-			{
-				AfxMessageBox("目录查询，缺少Address字段！",MB_OK|MB_ICONERROR);
-			}
-			int index2=st.find("</Address>");
-			if (index2==string::npos)
-			{
-				AfxMessageBox("目录查询，缺少/Address字段！",MB_OK|MB_ICONERROR);
-			}
-			string strT=st.substr(index+9,index2-index-9);
-			if (strT.compare("")==0)
-			{
-				AfxMessageBox("目录查询，Address字段为空！",MB_OK|MB_ICONERROR);
-			}
-			//252000001199000001 == pWnd->m_InfoClient.UserAddress
-			if (strT.compare("252000001199000001")==0)//252000001199000001目录节点
-			{
-				char *xml=new char[XMLSIZE];			
-				CreateXMLCatalogQuery(&xml);
-				char *dest=new char[MAXBUFSIZE];
-				Sip200Xml(&dest,m_SipMsg.msg,xml);				
-				//pWnd->SendData(dest);
-				UA_Msg uac_sendtemp;
-				strcpy(uac_sendtemp.data,dest);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp);
-				LeaveCriticalSection(&g_uac);
-				//pWnd->ShowSendData(dest);
-				delete dest;
-				delete xml;
-			}
-			if ((strT.compare("252000001201001001")==0) || (strT.compare("252000001301001001")==0))//252000001201001001 ||　252000001301001001子节点
-			{
-				char *xml=new char[XMLSIZE];
-				CreateXMLCatalogQueryNote(&xml);
-				char *dest=new char[MAXBUFSIZE];
-				Sip200Xml(&dest,m_SipMsg.msg,xml);
-				//pWnd->SendData(dest);
-				UA_Msg uac_sendtemp;
-				strcpy(uac_sendtemp.data,dest);
-				EnterCriticalSection(&g_uac);
-				uac_sendqueue.push(uac_sendtemp);
-				LeaveCriticalSection(&g_uac);
-				//pWnd->ShowSendData(dest);
-				delete dest;
-				delete xml;
-			}
-// 			char *xml=new char[XMLSIZE];			
-// 			CreateXMLCatalogQuery(&xml);
-// 			char *dest=new char[MAXBUFSIZE];
-// 			Sip200Xml(&dest,m_SipMsg.msg,xml);				
-// 			//pWnd->SendData(dest);
-// 			UA_Msg uac_sendtemp;
-// 			strcpy(uac_sendtemp.data,dest);
-// 			EnterCriticalSection(&g_uac);
-// 			uac_sendqueue.push(uac_sendtemp);
-// 			LeaveCriticalSection(&g_uac);		
-// 			//pWnd->ShowSendData(dest);
-// 			delete dest;
-// 			delete xml;			
-			//update log
-			pWnd->ShowTestLogData+="200 OK ----------->\r\n";
-		}
-		break;
-	case DeviceInfQuery://设备信息查询
-		{
-			char *xml=new char[XMLSIZE];			
-			CreateXMLDeviceInfQuery(&xml);
-			char *dest=new char[MAXBUFSIZE];
-			Sip200Xml(&dest,m_SipMsg.msg,xml);				
-			//pWnd->SendData(dest);
-			UA_Msg uac_sendtemp;
-			strcpy(uac_sendtemp.data,dest);
-			EnterCriticalSection(&g_uac);
-			uac_sendqueue.push(uac_sendtemp);
-			LeaveCriticalSection(&g_uac);		
-			//pWnd->ShowSendData(dest);
-			delete dest;
-			delete xml;			
-			//update log
-			pWnd->ShowTestLogData+="200 OK ----------->\r\n";
-		}
-		break;
+		//CmdTypeStart = strXML.find("<MaxFileNum>", 0);
+		//CmdTypeEnd = strXML.find("</MaxFileNum>", 0);
+		//string maxFileNum = strXML.substr(CmdTypeStart + 12, CmdTypeEnd - CmdTypeStart - 12);
+		//if ((CmdTypeStart == string::npos) || (CmdTypeEnd == string::npos)
+		//	|| (strcmp(maxFileNum.c_str(), "") == 0))
+		//{
+		//	char *dst = new char[MAXBUFSIZE];
+		//	Sip400(&dst, m_SipMsg.msg);
+		//	UA_Msg uac_sendtemp;
+		//	strcpy(uac_sendtemp.data, dst);
+		//	EnterCriticalSection(&g_uac);
+		//	uac_sendqueue.push(uac_sendtemp);
+		//	LeaveCriticalSection(&g_uac);
+		//	delete dst;
+		//	pWnd->ShowTestLogData += "400 --------> \r\n";
+		//	AfxMessageBox("缺少maxFileNum字段或者maxFileNum字段没有信息...");
+		//	return 1;
+		//}
+		//else
+		//{
+		//	MaxFileNum = atoi(maxFileNum.c_str());
+		//	//MaxFileNum = 3;
+		//	for (int i = 2; i < HistoryVideoList.size(); i += 6)
+		//	{
+		//		//截取列表中每一个时间，与传入的时间作比较，得到需要发送的历史流列表
+		//		tem = HistoryVideoList[i];
+		//		CmdTypeStart = tem.find("<CreationTime>", 0);
+		//		CmdTypeEnd = tem.find("</CreationTime>", 0);
+		//		temcreatetime = tem.substr(CmdTypeStart + 14, CmdTypeEnd - CmdTypeStart - 14);
+		//		sscanf(temcreatetime.c_str(), "%d - %d - %dT%d:%d : %dZ", &nYear, &nMonth, &nDate, &nHour, &nMin, &nSec);
+		//		CTime tempbeginTime(nYear, nMonth, nDate, nHour, nMin, nSec);
+		//		if (beginTime > tempbeginTime)
+		//		{
+		//			fromidex++;
+		//		}
+		//		//分别得到起始位置
+		//		tem = HistoryVideoList[i + 1];
+		//		CmdTypeStart = tem.find("<LastWriteTime>", 0);
+		//		CmdTypeEnd = tem.find("</LastWriteTime>", 0);
+		//		temendtime = tem.substr(CmdTypeStart + 15, CmdTypeEnd - CmdTypeStart - 15);
+		//		sscanf(temendtime.c_str(), "%d - %d - %dT%d:%d : %dZ", &nYear, &nMonth, &nDate, &nHour, &nMin, &nSec);
+		//		CTime tempendTime(nYear, nMonth, nDate, nHour, nMin, nSec);
+		//		if (endTime > tempendTime)
+		//		{
+		//			toindex++;
+		//		}
+		//	}
+		//	if (toindex - fromidex < MaxFileNum)
+		//		CreateXMLVideoQuery_c(&xml, fromidex, toindex);
+		//	else
+		//		CreateXMLVideoQuery_c(&xml, fromidex, fromidex + MaxFileNum);
+		//	char *dest = new char[MAXBUFSIZE];
+		//	Sip200Xml(&dest, m_SipMsg.msg, xml);
+		//	UA_Msg uac_sendtemp;
+		//	strcpy(uac_sendtemp.data, dest);
+		//	EnterCriticalSection(&g_uac);
+		//	uac_sendqueue.push(uac_sendtemp);
+		//	LeaveCriticalSection(&g_uac);
+		//	delete dest;
+		//	delete xml;
+		//	pWnd->ShowTestLogData += "200 OK ----------->\r\n";
+		//}
+	//}
+		//break;
 	case FlowQuery://流量查询
 		{
 			char *xml=new char[XMLSIZE];			
@@ -1138,7 +1123,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 			strTemp="<?xml version=\"1.0\"?>\r\n";
 			strTemp+="<Response>\r\n";
 			strTemp+="<QueryResponse>\r\n";
-			strTemp+="<Variable>VOD</Variable>\r\n";
+			strTemp+="<CmdType>VOD</CmdType>\r\n";
 			strTemp+="<Result>0</Result>\r\n";
 			strTemp+="<Bitrate>100</Bitrate>\r\n";
 			//rtsp://192.168.1.7:8554/filename.264
@@ -1251,7 +1236,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 				strTemp = "<?xml version=\"1.0\"?>\r\n";
 				strTemp += "<Response>\r\n";
 				strTemp += "<ControlResponse>\r\n";
-				strTemp += "<Variable>TimeSet</Variable>\r\n";
+				strTemp += "<CmdType>TimeSet</CmdType>\r\n";
 				strTemp += "<Result>0</Result>\r\n";
 				strTemp += "<Privilege>0100100001</Privilege>\r\n";//此设备所属的权限码
 				strTemp += "</ControlResponse>\r\n";
@@ -1399,14 +1384,14 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 				string tempUrl = url;
 				int indexUrl = tempUrl.find("/", 0);
 				tempUrl = tempUrl.substr(indexUrl);
-				if (strcmp(capTy.c_str(), "0") == 0)//抓取实时流的I帧
+				if (strcmp(capTy.c_str(), "0") == 0)//抓取实时流的I帧,使用http方式
 				{
 					//strURL = "http://192.168.9.240/11/123456.jpg";
 					char ch[1024] = "http:";
 					strcat(ch, tempUrl.c_str());
 					strURL = ch;
 				}
-				else if (strcmp(capTy.c_str(), "1") == 0)//IPC直接抓图
+				else if (strcmp(capTy.c_str(), "1") == 0)//IPC直接抓图，使用ftp方式
 				{
 					//strURL = "ftp://192.168.9.240/11/1.jpg";
 					char ch[1024] = "ftp:";
@@ -1418,7 +1403,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 				strTemp = "<?xml version=\"1.0\"?>\r\n";
 				strTemp += "<Response>\r\n";
 				strTemp += "<ControlResponse>\r\n";
-				strTemp += "<Variable>CaptureImage</Variable>\r\n";
+				strTemp += "<CmdType>CaptureImage</CmdType>\r\n";
 				strTemp += "<Result>0</Result>\r\n";
 				strTemp += "<URL>"+URL+"</URL>\r\n";
 				strTemp += "</ControlResponse>\r\n";
@@ -1442,7 +1427,7 @@ int CSipMsgProcess::SipParser(char *buffer,int Msglength)
 	return 0;
 }
 
-int CSipMsgProcess::SipRegisterCreate(char **strRegister,InfoServer m_InfoServer,InfoClient m_InfoClient)
+int CSipMsgProcess::SipRegisterOrQuitCreate(bool isRegister, char **strRegister,InfoServer m_InfoServer,InfoClient m_InfoClient)
 {	
 	char FromTag[10];
 	char CallID[10];
@@ -1518,7 +1503,14 @@ int CSipMsgProcess::SipRegisterCreate(char **strRegister,InfoServer m_InfoServer
 
 	osip_contact_set_url(SipRegister->m_SipMsg.contact,SipRegister->m_SipMsg.uriClient);
 	//osip_contact_set_displayname(SipRegister->m_SipMsg.contact,srcUserName);
-	osip_message_set_expires(SipRegister->m_SipMsg.msg,Common::EXPIRES_VALUE);
+	if (isRegister)
+	{
+		osip_message_set_expires(SipRegister->m_SipMsg.msg, Common::EXPIRES_VALUE);
+	}
+	else
+	{
+		osip_message_set_expires(SipRegister->m_SipMsg.msg,"0");
+	}
 	osip_message_set_max_forwards(SipRegister->m_SipMsg.msg,Common::MAX_FORWARD_VALUE);
 
 	//osip_message_set_content_length(SipRegister->m_SipMsg.msg,"0");		
@@ -1565,7 +1557,7 @@ int CSipMsgProcess::SipRegisterCreate(char **strRegister,InfoServer m_InfoServer
 	return m;	
 }
 
-int CSipMsgProcess::SipRegisterWithAuthCreate(char **strRegister,InfoServer m_InfoServer,InfoClient m_InfoClient,osip_message_t *srcmsg)
+int CSipMsgProcess::SipRegisterOrQuitWithAuthCreate(char **strRegister,InfoServer m_InfoServer,InfoClient m_InfoClient,osip_message_t *srcmsg)
 {	
 	char FromTag[10];
 	char CallID[10];
@@ -1639,7 +1631,10 @@ int CSipMsgProcess::SipRegisterWithAuthCreate(char **strRegister,InfoServer m_In
 
 	osip_contact_set_url(SipRegister->m_SipMsg.contact,SipRegister->m_SipMsg.uriClient);
 	//osip_contact_set_displayname(SipRegister->m_SipMsg.contact,srcUserName);
-	osip_message_set_expires(SipRegister->m_SipMsg.msg,"60");
+	osip_header * expires = NULL;
+	osip_message_get_expires(m_SipMsg.msg, 0, &expires);
+	osip_message_set_expires(SipRegister->m_SipMsg.msg, expires->hvalue);
+
 	osip_message_set_max_forwards(SipRegister->m_SipMsg.msg,"70");
 	//osip_message_set_content_length(SipRegister->m_SipMsg.msg,"0");
 
@@ -1719,23 +1714,18 @@ int CSipMsgProcess::SipRegisterWithAuthCreate(char **strRegister,InfoServer m_In
 			sprintf(HA2 + di * 2, "%02x", digest[di]);
 	}
 	{
-		//response=MD5(HA1:nonce:HA2) ---->RFC2069
-		//response=MD5(HA1:nonce:nc:cnoce:HA2) ---->RFC2617
 		md5_state_t state;
 		md5_byte_t digest[16];
 		int di;
 		md5_init(&state);
 		g_authInfo.nc="00000001";
 		g_authInfo.cnonce="0k4f413b";
-		//CString cstrGroup=CString(HA1)+":"+CString(g_authInfo.nonce.c_str())+":"+CString(HA2);
 		CString cstrGroup=CString(HA1)+":"+CString(g_authInfo.nonce.c_str())+":"+CString(g_authInfo.nc.c_str())+":"+CString(g_authInfo.cnonce.c_str())+":"+CString(HA2);
 		md5_append(&state, (const md5_byte_t *)(cstrGroup.GetBuffer(cstrGroup.GetLength())), cstrGroup.GetLength());
 		md5_finish(&state, digest);
 		for (di = 0; di < 16; ++di)
 			sprintf(response + di * 2, "%02x", digest[di]);
 	}
-	//printf("%s",hex_output);
-	//CString cstr=CString("Authorization: Digest username=\"")+g_authInfo.username.c_str()+"\",realm=\""+g_authInfo.realm.c_str()+"\",nonce=\""+g_authInfo.nonce.c_str()+"\",uri=\""+g_authInfo.uri.c_str()+"\",response=\""+response+"\",algorithm=MD5,opaque=\"\"\r\n";
 	CString cstr=CString("Authorization: Digest username=\"")+g_authInfo.username.c_str()+"\",realm=\""+g_authInfo.realm.c_str()+"\",nonce=\""+g_authInfo.nonce.c_str()+"\",uri=\""+g_authInfo.uri.c_str()+"\",nc=\""+g_authInfo.nc.c_str()+"\",cnonce=\""+g_authInfo.cnonce.c_str()+"\",response=\""+response+"\",algorithm=MD5,opaque=\"\"\r\n";
 	string st=cstr.GetBuffer(0);
 	size_t length;
@@ -1745,8 +1735,6 @@ int CSipMsgProcess::SipRegisterWithAuthCreate(char **strRegister,InfoServer m_In
 	string strtemp=dest;
 	int index=strtemp.find("Content-Length");
 	strtemp.insert(index,st);
-	//index=strtemp.find("From");
-	//strtemp.insert(index,st0.GetBuffer(st0.GetLength()));
 
 	TRACE(strtemp.c_str());
 	strcpy(*strRegister,strtemp.c_str());
@@ -1759,109 +1747,10 @@ void CSipMsgProcess::XmlNodeCreate(char** strNodeXml)
 	HWND   hnd = ::FindWindow(NULL, _T("UAC"));
 	CUACDlg*  pWnd = (CUACDlg*)CWnd::FromHandle(hnd);
 	CString strTemp;
-	/*strTemp ="<?xml version=\"1.0\"?>\r\n";
-	strTemp += "<Action>\r\n";
-	strTemp += "<Variable>Catalog</Variable>\r\n";
-	strTemp += "<Parent>"+pWnd->m_InfoClient.UserAddress+"</Parent>\r\n";
-	strTemp += "<SubNum>2</SubNum>\r\n";
-	strTemp += "<SubList>\r\n";
-	//Encoder 01
-	strTemp += "<Item>\r\n";
-	strTemp += "<Name>Encoder 01</Name>\r\n";
-	strTemp += "<Address>252000001101001001</Address>\r\n";
-	strTemp += "<Privilege>%11%01</Privilege>\r\n";
-	strTemp += "<SeriesNumber>000000000123</SeriesNumber>\r\n";
-	strTemp += "<Status>0</Status>\r\n";
-	strTemp += "<Longitude>10</Longitude>\r\n";
-	strTemp += "<Latitude>10</Latitude>\r\n";
-	strTemp += "<Elevation>10</Elevation>\r\n";
-	strTemp += "<Roadway>10</Roadway>\r\n";
-	strTemp += "<PileNo>10</PileNo>\r\n";
-	strTemp += "<Manufacturer>海康威视</Manufacturer>\r\n";
-	strTemp += "<Model>10</Model>\r\n";
-	strTemp += "<Chip>10</Chip>\r\n";
-	strTemp += "<OperateType>ADD</OperateType>\r\n";
-	strTemp += "</Item>\r\n";
-	pWnd->m_Invite.m_address.AddString("Encoder 01");
-	pWnd->m_Invite.address.push_back("252000001101001001");
-
-	//IPC 01
-	strTemp += "<Item>\r\n";
-	strTemp += "<Name>IPC 01</Name>\r\n";
-	strTemp += "<Address>252000001102001001</Address>\r\n";
-	strTemp += "<Privilege>%11%02</Privilege>\r\n";
-	strTemp += "<SeriesNumber>000000000213</SeriesNumber>\r\n";
-	strTemp += "<Status>0</Status>\r\n";
-	strTemp += "<Longitude>20</Longitude>\r\n";
-	strTemp += "<Latitude>20</Latitude>\r\n";
-	strTemp += "<Roadway>20</Roadway>\r\n";
-	strTemp += "<Elevation>20</Elevation>\r\n";
-	strTemp += "<PileNo>20</PileNo>\r\n";
-	strTemp += "<Manufacturer>海康威视</Manufacturer>\r\n";
-	strTemp += "<Model>20</Model>\r\n";
-	strTemp += "<Chip>20</Chip>\r\n";
-	strTemp += "<OperateType>ADD</OperateType>\r\n";
-	strTemp += "</Item>\r\n";
-	pWnd->m_Invite.m_address.AddString("IPC 01");
-	pWnd->m_Invite.address.push_back("252000001102001001");
-
-	//Subnode 01
-	strTemp += "<Item>\r\n";
-	strTemp += "<Name>Subnode 01</Name>\r\n";
-	strTemp += "<Address>252000001103001001</Address>\r\n";
-	strTemp += "<Privilege>%11%03</Privilege>\r\n";
-	strTemp += "<SeriesNumber>000000000313</SeriesNumber>\r\n";
-	strTemp += "<Status>0</Status>\r\n";
-	strTemp += "<Longitude>30</Longitude>\r\n";
-	strTemp += "<Latitude>30</Latitude>\r\n";
-	strTemp += "<Roadway>30</Roadway>\r\n";
-	strTemp += "<Elevation>30</Elevation>\r\n";
-	//<道路名称和位置桩号可不填>
-	strTemp += "<OperateType>ADD</OperateType>\r\n";
-	strTemp += "</Item>\r\n";
-	pWnd->m_Invite.m_address.AddString("Subnode 01");
-	pWnd->m_Invite.address.push_back("252000001103001001");
-
-	//DVR 01
-	strTemp += "<Item>\r\n";
-	strTemp += "<Name>DVR 01</Name>\r\n";
-	strTemp += "<Address>252000001104001001</Address>\r\n";
-	strTemp += "<Privilege>%11%04</Privilege>\r\n";
-	strTemp += "<SeriesNumber>000000000413</SeriesNumber>\r\n";
-	strTemp += "<Status>0</Status>\r\n";
-	strTemp += "<Longitude>40</Longitude>\r\n";
-	strTemp += "<Latitude>40</Latitude>\r\n";
-	strTemp += "<Elevation>40</Elevation>\r\n";
-	strTemp += "<Roadway>40</Roadway>\r\n";
-	strTemp += "<PileNo>10</PileNo>\r\n";
-	strTemp += "<TotalSpace>254312MB</TotalSpace>\r\n";
-	strTemp += "<MaxVOD>4</MaxVOD>\r\n";
-	strTemp += "<Manufacturer>海康威视</Manufacturer>\r\n";
-	strTemp += "<Model>40</Model>\r\n";
-	strTemp += "<Chip>40</Chip>\r\n";
-	strTemp += "<FreeSpace>20480</FreeSpace>\r\n";
-	strTemp += "<CurrentRecord>16</CurrentRecord>\r\n";
-	strTemp += "<CurrentVOD>3</CurrentVOD>\r\n";
-	strTemp += "<CameraAddress>000000001104001001</CameraAddress>\r\n";
-	strTemp += "<CameraAddress>000000001104002001</CameraAddress>\r\n";
-	strTemp += "<CameraAddress>000000001104003001</CameraAddress>\r\n";
-
-	strTemp += "<OperateType>ADD</OperateType>\r\n";
-	strTemp += "</Item>\r\n";
-
-
-
-	pWnd->m_Invite.m_address.AddString("DVR 01");
-	pWnd->m_Invite.address.push_back("252000001104001001");
-
-	strTemp += "</SubList>\r\n";
-	strTemp += "</Action>\r\n";
-
-	*/
 #pragma region NODEXML
 	strTemp = "<?xml version=\"1.0\"?>\r\n";
 	strTemp += "<Action>\r\n";
-	strTemp += "<Variable>Catalog</Variable>\r\n";
+	strTemp += "<CmdType>Catalog</CmdType>\r\n";
 	strTemp += "<Parent>" + pWnd->m_InfoClient.UserAddress + "</Parent>\r\n";
 	//strTemp+="<TotalSubNum>10</TotalSubNum>\r\n";
 	//strTemp+="<TotalOnlineSubNum>10</TotalOnlineSubNum>\r\n";
@@ -1955,7 +1844,7 @@ void CSipMsgProcess::XmlNodeCreate1(char** strNodeXml)
 	CString strTemp;
 	strTemp = "<?xml version=\"1.0\"?>\r\n";
 	strTemp += "<Action>\r\n";
-	strTemp += "<Variable>Catalog</Variable>\r\n";
+	strTemp += "<CmdType>Catalog</CmdType>\r\n";
 	strTemp += "<Parent>" + pWnd->m_InfoClient.UserAddress + "</Parent>\r\n";
 	strTemp += "<SubNum>2</SubNum>\r\n";
 	strTemp += "<SubList>\r\n";
@@ -2011,7 +1900,7 @@ void CSipMsgProcess::XmlNodeCreate2(char** strNodeXml)
 	CString strTemp;
 	strTemp = "<?xml version=\"1.0\"?>\r\n";
 	strTemp += "<Action>\r\n";
-	strTemp += "<Variable>Catalog</Variable>\r\n";
+	strTemp += "<CmdType>Catalog</CmdType>\r\n";
 	strTemp += "<Parent>" + pWnd->m_InfoClient.UserAddress + "</Parent>\r\n";
 	strTemp += "<SubNum>2</SubNum>\r\n";
 	strTemp += "<SubList>\r\n";
@@ -2235,6 +2124,270 @@ void CSipMsgProcess::SipInvite400(char **dst,osip_message_t *srcmsg)
 	osip_message_to_str(Sip200->m_SipMsg.msg,&dest,&len);
 	memset(*dst,0,MAXBUFSIZE);
 	memcpy(*dst,dest,len);
+	osip_free(dest);
+}
+
+void CSipMsgProcess::SipAlarmEventNoticeDistribute(char **dst, InfoServer m_InfoServer, InfoClient m_InfoClient, char *Xml)
+{
+	char FromTag[50];
+	char CallID[50];
+	char ToTag[50];
+	//远程配置信息
+	char *dstCode = (LPSTR)(LPCTSTR)m_InfoClient.UserAddress;
+	char *dstUserName = (LPSTR)(LPCTSTR)m_InfoClient.UserName;
+	char *dstIP = (LPSTR)(LPCTSTR)m_InfoClient.IP;
+	char *dstPort = (LPSTR)(LPCTSTR)m_InfoClient.Port;
+	//本地配置信息
+	char *srcCode = (LPSTR)(LPCTSTR)m_InfoServer.UserAddress;
+	char *srcUserName = (LPSTR)(LPCTSTR)m_InfoServer.UserName;
+	char *srcIP = (LPSTR)(LPCTSTR)m_InfoServer.IP;
+	char *srcPort = (LPSTR)(LPCTSTR)m_InfoServer.Port;
+
+	char *dest;
+	CSipMsgProcess *SipHeader = new CSipMsgProcess;
+	////////////////////////
+	osip_uri_set_host(SipHeader->m_SipMsg.uriServer, dstIP);
+	osip_uri_set_scheme(SipHeader->m_SipMsg.uriServer, "sip");
+	osip_uri_set_username(SipHeader->m_SipMsg.uriServer, dstCode);
+	osip_uri_set_port(SipHeader->m_SipMsg.uriServer, dstPort);
+
+	osip_uri_set_host(SipHeader->m_SipMsg.uriClient, srcIP);
+	osip_uri_set_scheme(SipHeader->m_SipMsg.uriClient, "sip");
+	osip_uri_set_username(SipHeader->m_SipMsg.uriClient, srcCode);
+	osip_uri_set_port(SipHeader->m_SipMsg.uriClient, srcPort);
+
+	osip_via_set_version(SipHeader->m_SipMsg.via, "2.0");
+	osip_via_set_protocol(SipHeader->m_SipMsg.via, "UDP");
+	osip_via_set_port(SipHeader->m_SipMsg.via, srcPort);
+	osip_via_set_host(SipHeader->m_SipMsg.via, srcIP);
+
+	//osip_call_id_set_host(SipHeader->m_SipMsg.callid, srcIP);
+
+	int RandData;
+	srand((unsigned int)time(0));
+	RandData = rand();
+	char str[8];
+	itoa(RandData, str, 10);
+	strcpy(FromTag, str);
+	RandData = rand();
+	itoa(RandData, str, 10);
+	strcpy(CallID, str);
+	osip_call_id_set_number(SipHeader->m_SipMsg.callid, CallID);
+
+	//osip_from_set_displayname(SipHeader->m_SipMsg.from,srcUserName);
+	osip_from_set_tag(SipHeader->m_SipMsg.from, FromTag);
+	osip_from_set_url(SipHeader->m_SipMsg.from, SipHeader->m_SipMsg.uriClient);
+	osip_to_set_tag(SipHeader->m_SipMsg.to, ToTag);
+	osip_to_set_url(SipHeader->m_SipMsg.to, SipHeader->m_SipMsg.uriServer);
+	osip_to_set_url(SipHeader->m_SipMsg.to, SipHeader->m_SipMsg.uriServer);
+
+	osip_cseq_set_method(SipHeader->m_SipMsg.cseq, "Message");
+	osip_cseq_set_number(SipHeader->m_SipMsg.cseq, "1");
+
+	osip_message_set_uri(SipHeader->m_SipMsg.msg, SipHeader->m_SipMsg.uriServer);
+	osip_message_set_method(SipHeader->m_SipMsg.msg, "Message");
+
+	osip_contact_set_url(SipHeader->m_SipMsg.contact, SipHeader->m_SipMsg.uriClient);
+	osip_contact_set_displayname(SipHeader->m_SipMsg.contact, srcUserName);
+	osip_message_set_max_forwards(SipHeader->m_SipMsg.msg, "70");
+
+
+	osip_to_to_str(SipHeader->m_SipMsg.to, &dest);
+	osip_message_set_to(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_call_id_to_str(SipHeader->m_SipMsg.callid, &dest);
+	osip_message_set_call_id(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_from_to_str(SipHeader->m_SipMsg.from, &dest);
+	osip_message_set_from(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_contact_to_str(SipHeader->m_SipMsg.contact, &dest);
+	osip_message_set_contact(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_cseq_to_str(SipHeader->m_SipMsg.cseq, &dest);
+	osip_message_set_cseq(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_via_to_str(SipHeader->m_SipMsg.via, &dest);
+	osip_message_set_via(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+	osip_message_set_content_type(SipHeader->m_SipMsg.msg, "Application/MANSCDP+XML");
+	osip_message_set_body(SipHeader->m_SipMsg.msg, Xml, strlen(Xml));
+	size_t length;
+	//osip_message_set_max_forwards(SipHeader->m_SipMsg.msg, "90");
+	osip_message_to_str(SipHeader->m_SipMsg.msg, &dest, &length);
+
+	string temp(Xml);
+
+	int start = temp.find("<SN>", 0);
+	int end = temp.find("</SN>", start + 1);
+	string SN = temp.substr(start + 4, end - start - 4).c_str();
+	start = temp.find("<DeviceID>",0);
+	end = temp.find("</DeviceID>",start+1);
+	string DeviceID = temp.substr(start + 10, end - start - 10).c_str();
+	string strtemp = dest;
+	string st = "<?xml version=”1.0”?>\r\n";
+	st += "<Response>\r\n";
+	st += "<CmdType>Alarm</CmdType>\r\n";
+	st += "<SN>" + SN + "</SN>\r\n";
+	st += "<DeviceID>"+ DeviceID + "</DeviceID>\r\n";
+	st += "<Result>OK</Result>\r\n";
+	st += "</Response>\r\n";
+	strtemp += st;
+	strcpy(*dst, strtemp.c_str());
+	osip_free(dest);
+}
+
+int CSipMsgProcess::CreateXMLVideoAudioQueryNode(char ** dstXML)
+{
+	CString strTemp;
+	strTemp = "<?xml version=\"1.0\"?>\r\n";
+	strTemp += "<Response>\r\n";
+	strTemp += "<CmdType>Catalog</CmdType>\r\n";
+	strTemp += "<SN>17430</SN>\r\n";
+	strTemp += "<DeviceID>64010000001310000001</DeviceID>\r\n";
+	strTemp += "<Name>Camera1</Name>\r\n";
+	strTemp += "SumNum>100</SumNum>\r\n";
+	strTemp += "<RecordListNum=2>\r\n";
+	strTemp += "<Item>\r\n";
+	strTemp += "<DeviceID>64010000001310000001</DeviceID>\r\n";
+	strTemp += "<Name>Camera1</Name>\r\n";
+	strTemp += "<FilePath>64010000002100000001</FilePath>\r\n";
+	strTemp += "<Address>Address1</Address>\r\n";
+	strTemp += "<StartTime>2010-11-12T10:10:00</StartTime>\r\n";
+	strTemp += "<EndTime>2010-11-12T10:20:00</EndTime>\r\n";
+	strTemp += "<Secrecy>0</Secrecy>\r\n";
+	strTemp += "<Type>time</Type>\r\n";
+	strTemp += "<RecorderID>64010000003000000001</RecorderID>\r\n";
+	strTemp += "</Item>\r\n";
+	strTemp += "<Item>\r\n";
+	strTemp += "<DeviceID>64010000001310000002</DeviceID>\r\n";
+	strTemp += "<Name>Camera2</Name>\r\n";
+	strTemp += "<FilePath>64010000002100000002</FilePath>\r\n";
+	strTemp += "<Address>Address1</Address>\r\n";
+	strTemp += "<StartTime>2010-11-12T10:20:00</StartTime>\r\n";
+	strTemp += "<EndTime>2010-11-12T10:30:00</EndTime>\r\n";
+	strTemp += "<Secrecy>0</Secrecy>\r\n";
+	strTemp += "<Type>time</Type>\r\n";
+	strTemp += "<RecorderID>64010000003000000002</RecorderID>\r\n";
+	strTemp += "</Item>\r\n";
+	strTemp += "</RecordList>\r\n";
+	strTemp += "</Response>\r\n";
+
+	char *dst = (LPSTR)(LPCTSTR)strTemp;
+	strcpy(*dstXML, dst);
+	return 0;
+}
+
+void CSipMsgProcess::SipVideoAudioQueryXml(char ** dst, InfoServer m_InfoServer, InfoClient m_InfoClient, char * Xml, osip_uri_param_t * FromTag)
+{
+	char ToTag[50];
+	char CallID[50];
+	//远程配置信息
+	char *dstCode = (LPSTR)(LPCTSTR)m_InfoClient.UserAddress;
+	char *dstUserName = (LPSTR)(LPCTSTR)m_InfoClient.UserName;
+	char *dstIP = (LPSTR)(LPCTSTR)m_InfoClient.IP;
+	char *dstPort = (LPSTR)(LPCTSTR)m_InfoClient.Port;
+	//本地配置信息
+	char *srcCode = (LPSTR)(LPCTSTR)m_InfoServer.UserAddress;
+	char *srcUserName = (LPSTR)(LPCTSTR)m_InfoServer.UserName;
+	char *srcIP = (LPSTR)(LPCTSTR)m_InfoServer.IP;
+	char *srcPort = (LPSTR)(LPCTSTR)m_InfoServer.Port;
+
+	int RandData;
+	srand((unsigned int)time(0));
+	RandData = rand();
+	char str[8];
+	itoa(RandData, str, 10);
+	strcpy(ToTag, str);
+	RandData = rand();
+	itoa(RandData, str, 10);
+	strcpy(CallID, str);
+
+	char *dest;
+	CSipMsgProcess *SipHeader = new CSipMsgProcess;
+	////////////////////////
+	osip_uri_set_host(SipHeader->m_SipMsg.uriServer, dstIP);
+	osip_uri_set_scheme(SipHeader->m_SipMsg.uriServer, "sip");
+	osip_uri_set_username(SipHeader->m_SipMsg.uriServer, dstCode);
+	osip_uri_set_port(SipHeader->m_SipMsg.uriServer, dstPort);
+
+	osip_uri_set_host(SipHeader->m_SipMsg.uriClient, srcIP);
+	osip_uri_set_scheme(SipHeader->m_SipMsg.uriClient, "sip");
+	osip_uri_set_username(SipHeader->m_SipMsg.uriClient, srcCode);
+	osip_uri_set_port(SipHeader->m_SipMsg.uriClient, srcPort);
+
+	osip_via_set_version(SipHeader->m_SipMsg.via, "2.0");
+	osip_via_set_protocol(SipHeader->m_SipMsg.via, "UDP");
+	osip_via_set_port(SipHeader->m_SipMsg.via, srcPort);
+	//RandData=rand();	
+	//char sdtr[8];	
+	//char branch[20];
+	//itoa(RandData,sdtr,16);
+	//strcpy(branch,"z9hG4bK-");
+	//strcat(branch,sdtr);
+	char branch[20] = "z9hG4bK";
+	for (int i = 0; i < 8; i++)
+	{
+		RandData = rand() % 10;
+		branch[i + 7] = RandData + '0';
+	}
+	osip_via_set_branch(SipHeader->m_SipMsg.via, branch);//随机数
+	osip_via_set_host(SipHeader->m_SipMsg.via, srcIP);
+
+	//osip_call_id_set_host(SipHeader->m_SipMsg.callid, srcIP);
+	osip_call_id_set_number(SipHeader->m_SipMsg.callid, CallID);//随机数	
+																//osip_from_set_displayname(SipHeader->m_SipMsg.from,srcUserName);
+	osip_from_set_tag(SipHeader->m_SipMsg.from, FromTag->gvalue);//随机数
+	osip_to_set_tag(SipHeader->m_SipMsg.to, ToTag);//随机数
+	osip_from_set_url(SipHeader->m_SipMsg.from, SipHeader->m_SipMsg.uriClient);
+
+	//osip_to_set_displayname(SipHeader->m_SipMsg.to,dstUserName);	
+	osip_to_set_url(SipHeader->m_SipMsg.to, SipHeader->m_SipMsg.uriServer);
+
+	osip_cseq_set_method(SipHeader->m_SipMsg.cseq, "Message");
+	osip_cseq_set_number(SipHeader->m_SipMsg.cseq, "1");
+
+	osip_message_set_uri(SipHeader->m_SipMsg.msg, SipHeader->m_SipMsg.uriServer);
+	osip_message_set_method(SipHeader->m_SipMsg.msg, "Message");
+
+	osip_contact_set_url(SipHeader->m_SipMsg.contact, SipHeader->m_SipMsg.uriClient);
+	osip_contact_set_displayname(SipHeader->m_SipMsg.contact, srcUserName);
+
+	osip_to_to_str(SipHeader->m_SipMsg.to, &dest);
+	osip_message_set_to(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_call_id_to_str(SipHeader->m_SipMsg.callid, &dest);
+	osip_message_set_call_id(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_from_to_str(SipHeader->m_SipMsg.from, &dest);
+	osip_message_set_from(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_contact_to_str(SipHeader->m_SipMsg.contact, &dest);
+	osip_message_set_contact(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_cseq_to_str(SipHeader->m_SipMsg.cseq, &dest);
+	osip_message_set_cseq(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_via_to_str(SipHeader->m_SipMsg.via, &dest);
+	osip_message_set_via(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+	osip_message_set_content_type(SipHeader->m_SipMsg.msg, "Application/MANSCDP+XML");
+	osip_message_set_body(SipHeader->m_SipMsg.msg, Xml, strlen(Xml));
+	size_t length;
+	osip_message_set_max_forwards(SipHeader->m_SipMsg.msg, "70");
+	osip_message_to_str(SipHeader->m_SipMsg.msg, &dest, &length);
+
+	strcpy(*dst, dest);
 	osip_free(dest);
 }
 
@@ -2735,7 +2888,7 @@ void CSipMsgProcess::Sip200Xml(char **dstBuf,osip_message_t *srcmsg,CString Xml)
 	}
 	osip_free(dest);
 	//load XML message in to sip message
-	osip_message_set_content_type(Sip200->m_SipMsg.msg,"Application/DDCP");
+	osip_message_set_content_type(Sip200->m_SipMsg.msg,"Application/MANSCDP+xml");
 	char *xml=(LPSTR)(LPCTSTR)Xml;
 	osip_message_set_body(Sip200->m_SipMsg.msg,xml,strlen(xml));		
 	osip_message_to_str(Sip200->m_SipMsg.msg,&dest,&len);
@@ -2763,79 +2916,79 @@ BOOL CSipMsgProcess::XmlInviteCreate(char** strInviteXml,char *srcXml)
 	CString TransmitMode;
 	CString Protocol;
 	CString Multicast;
-	string::size_type VariableStart;	
-	string::size_type VariableEnd;	
+	string::size_type CmdTypeStart;	
+	string::size_type CmdTypeEnd;	
 
-	if( (VariableStart=strTemp.find("<Format>",0)) ==string::npos)
+	if( (CmdTypeStart=strTemp.find("<Format>",0)) ==string::npos)
 	{
 		AfxMessageBox("实时流请求缺少Format字段");
 		return FALSE;	
 	}
 							
-	if ( (VariableEnd=strTemp.find("</Format>",VariableStart+1)) ==string::npos)		
+	if ( (CmdTypeEnd=strTemp.find("</Format>",CmdTypeStart+1)) ==string::npos)		
 	{
 		AfxMessageBox("实时流请求缺少Format字段");
 		return FALSE;	
 	}	
-	Format = strTemp.substr(VariableStart+8,VariableEnd-VariableStart-8).c_str();
-	if( (VariableStart=strTemp.find("<Video>",0)) ==string::npos)			
+	Format = strTemp.substr(CmdTypeStart+8,CmdTypeEnd-CmdTypeStart-8).c_str();
+	if( (CmdTypeStart=strTemp.find("<Video>",0)) ==string::npos)			
 	{
 		AfxMessageBox("实时流请求缺少Video字段");
 		return FALSE;	
 	}					
-	if ( (VariableEnd=strTemp.find("</Video>",VariableStart+1)) ==string::npos)		
+	if ( (CmdTypeEnd=strTemp.find("</Video>",CmdTypeStart+1)) ==string::npos)		
 	{
 		AfxMessageBox("实时流请求缺少Video字段");
 		return FALSE;	
 	}				
-	Video=strTemp.substr(VariableStart+7,VariableEnd-VariableStart-7).c_str();
-	//if ((VariableStart = strTemp.find("<Stream>", 0)) == string::npos)
+	Video=strTemp.substr(CmdTypeStart+7,CmdTypeEnd-CmdTypeStart-7).c_str();
+	//if ((CmdTypeStart = strTemp.find("<Stream>", 0)) == string::npos)
 	//{
 	//	AfxMessageBox("实时流请求缺少Stream字段");
 	//	return FALSE;
 	//}
-	//if ((VariableEnd = strTemp.find("</Stream>", VariableStart + 1)) == string::npos)
+	//if ((CmdTypeEnd = strTemp.find("</Stream>", CmdTypeStart + 1)) == string::npos)
 	//{
 	//	AfxMessageBox("实时流请求缺少/Stream字段");
 	//	return FALSE;
 	//}
-	if( (VariableStart=strTemp.find("<Audio>",0)) ==string::npos)			
+	if( (CmdTypeStart=strTemp.find("<Audio>",0)) ==string::npos)			
 	{
 		AfxMessageBox("实时流请求缺少Audio字段");
 		return FALSE;	
 	}								
-	if ( (VariableEnd=strTemp.find("</Audio>",VariableStart+1)) ==string::npos)		
+	if ( (CmdTypeEnd=strTemp.find("</Audio>",CmdTypeStart+1)) ==string::npos)		
 	{
 		AfxMessageBox("实时流请求缺少Audio字段");
 		return FALSE;	
 	}			
-	Audio=strTemp.substr(VariableStart+7,VariableEnd-VariableStart-7).c_str();
-	if( (VariableStart=strTemp.find("<MaxBitrate>",0)) ==string::npos)			
+	Audio=strTemp.substr(CmdTypeStart+7,CmdTypeEnd-CmdTypeStart-7).c_str();
+	if( (CmdTypeStart=strTemp.find("<MaxBitrate>",0)) ==string::npos)			
 	{
 		AfxMessageBox("实时流请求缺少MaxBitrate字段");
 		return FALSE;	
 	}							
-	if ( (VariableEnd=strTemp.find("</MaxBitrate>",VariableStart+1)) ==string::npos)		
+	if ( (CmdTypeEnd=strTemp.find("</MaxBitrate>",CmdTypeStart+1)) ==string::npos)		
 	{
 		AfxMessageBox("实时流请求缺少MaxBitrate字段");
 		return FALSE;	
 	}			
-	MaxBitrate=strTemp.substr(VariableStart+12,VariableEnd-VariableStart-12).c_str();
- 	if( (VariableStart=strTemp.find("<Multicast>",0)) ==string::npos)			
+	MaxBitrate=strTemp.substr(CmdTypeStart+12,CmdTypeEnd-CmdTypeStart-12).c_str();
+ 	if( (CmdTypeStart=strTemp.find("<Multicast>",0)) ==string::npos)			
  	{
  		AfxMessageBox("实时流请求缺少Multicast字段");
  		return FALSE;	
  	}							
- 	if ( (VariableEnd=strTemp.find("</Multicast>",VariableStart+1)) ==string::npos)		
+ 	if ( (CmdTypeEnd=strTemp.find("</Multicast>",CmdTypeStart+1)) ==string::npos)		
  	{
  		AfxMessageBox("实时流请求缺少Multicast字段");
  		return FALSE;	
  	}			
- 	Multicast = strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11).c_str();
+ 	Multicast = strTemp.substr(CmdTypeStart+11,CmdTypeEnd-CmdTypeStart-11).c_str();
 	string XmlInvite;	
 	XmlInvite="<?xml version=\"1.0\"?>\r\n";
 	XmlInvite+="<Response>\r\n";
-	XmlInvite+="<Variable>RealMedia</Variable>\r\n";
+	XmlInvite+="<CmdType>RealMedia</CmdType>\r\n";
 	XmlInvite+="<Result>0</Result>\r\n";
 	XmlInvite += "<Format>" + Format + "</Format>\r\n"; //有的厂商不支持720，修改CIF
 	XmlInvite += "<Video>" + Video + "</Video>\r\n";
@@ -2864,46 +3017,46 @@ BOOL CSipMsgProcess::XmlPTZCreate(char** strPTZXml,char *srcXml)
 	string PTZCommand;
 	string Address;
 	string Protocol;
-	string::size_type VariableStart;	
-	string::size_type VariableEnd;
+	string::size_type CmdTypeStart;	
+	string::size_type CmdTypeEnd;
 
-	if( (VariableStart=strTemp.find("<Privilege>",0)) ==string::npos)			
+	if( (CmdTypeStart=strTemp.find("<Privilege>",0)) ==string::npos)			
 	{
 		AfxMessageBox("实时流请求缺少Privilege字段");
 		return FALSE;	
 	}								
-	if ( (VariableEnd=strTemp.find("</Privilege>",VariableStart+1)) ==string::npos)		
+	if ( (CmdTypeEnd=strTemp.find("</Privilege>",CmdTypeStart+1)) ==string::npos)		
 	{
 		AfxMessageBox("实时流请求缺少Privilege字段");
 		return FALSE;	
 	}	
-	UserCode=strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11);
-	if( (VariableStart=strTemp.find("<Command>",0)) ==string::npos)			
+	UserCode=strTemp.substr(CmdTypeStart+11,CmdTypeEnd-CmdTypeStart-11);
+	if( (CmdTypeStart=strTemp.find("<Command>",0)) ==string::npos)			
 	{
 		AfxMessageBox("实时流请求缺少Command字段");
 		return FALSE;	
 	}
-	if ( (VariableEnd=strTemp.find("</Command>",VariableStart+1)) ==string::npos)		
+	if ( (CmdTypeEnd=strTemp.find("</Command>",CmdTypeStart+1)) ==string::npos)		
 	{
 		AfxMessageBox("实时流请求缺少Command字段");
 		return FALSE;	
 	}				
- 	PTZCommand=strTemp.substr(VariableStart+10,VariableEnd-VariableStart-10);
-// 	if( (VariableStart=strTemp.find("<Address>",0)) ==string::npos)			
+ 	PTZCommand=strTemp.substr(CmdTypeStart+10,CmdTypeEnd-CmdTypeStart-10);
+// 	if( (CmdTypeStart=strTemp.find("<Address>",0)) ==string::npos)			
 // 		return FALSE;						
-// 	if ( (VariableEnd=strTemp.find("</Address>",VariableStart+1)) ==string::npos)		
+// 	if ( (CmdTypeEnd=strTemp.find("</Address>",CmdTypeStart+1)) ==string::npos)		
 // 		return FALSE;	
-// 	Address=strTemp.substr(VariableStart+9,VariableEnd-VariableStart-9);
-	/*if( (VariableStart=strTemp.find("<Protocol>",0)) ==string::npos)			
+// 	Address=strTemp.substr(CmdTypeStart+9,CmdTypeEnd-CmdTypeStart-9);
+	/*if( (CmdTypeStart=strTemp.find("<Protocol>",0)) ==string::npos)			
 		return FALSE;						
-	if ( (VariableEnd=strTemp.find("</Protocol>",VariableStart+1)) ==string::npos)		
+	if ( (CmdTypeEnd=strTemp.find("</Protocol>",CmdTypeStart+1)) ==string::npos)		
 		return FALSE;
-	Protocol=strTemp.substr(VariableStart+10,VariableEnd-VariableStart-10);*/
+	Protocol=strTemp.substr(CmdTypeStart+10,CmdTypeEnd-CmdTypeStart-10);*/
 	string XmlPTZ;
 	XmlPTZ="<?xml version=\"1.0\"?>\r\n";
 	XmlPTZ+="<Response>\r\n";
 	XmlPTZ+="<ControlResponse>\r\n";
-	XmlPTZ+="<Variable>PTZCommand</Variable>\r\n";
+	XmlPTZ+="<CmdType>PTZCommand</CmdType>\r\n";
 	XmlPTZ+="<Result>0</Result>\r\n";
 	XmlPTZ+="<Command>";
 	XmlPTZ+=PTZCommand;
@@ -2920,24 +3073,24 @@ BOOL CSipMsgProcess::XmlEncoderSetCreate(char** strEncoderSetXml,char *srcXml)
 	string Privilege;
 	//HWND   hnd = ::FindWindow(NULL, _T("UAC"));
 	//CUACDlg*  pWnd = (CUACDlg*)CWnd::FromHandle(hnd);
-	string::size_type VariableStart;	
-	string::size_type VariableEnd;
-	if ((VariableStart = strTemp.find("<Privilege>", 0)) == string::npos)
+	string::size_type CmdTypeStart;	
+	string::size_type CmdTypeEnd;
+	if ((CmdTypeStart = strTemp.find("<Privilege>", 0)) == string::npos)
 	{
 		AfxMessageBox("编码器设置，缺少Privilege字段！", MB_OK | MB_ICONERROR);
 		return FALSE;						
 	}
-	if ((VariableEnd = strTemp.find("</Privilege>", VariableStart + 1)) == string::npos)
+	if ((CmdTypeEnd = strTemp.find("</Privilege>", CmdTypeStart + 1)) == string::npos)
 	{
 		AfxMessageBox("编码器设置，缺少/Privilege字段！", MB_OK | MB_ICONERROR);
 		return FALSE;
 	}
-	Privilege = strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11);
+	Privilege = strTemp.substr(CmdTypeStart+11,CmdTypeEnd-CmdTypeStart-11);
 	string XmlEncoderSet;
 	XmlEncoderSet = "<?xml version=\"1.0\"?>\r\n";
 	XmlEncoderSet += "<Response>\r\n";
 	XmlEncoderSet += "<ControlResponse>\r\n";
-	XmlEncoderSet += "<Variable>EncoderSet</Variable>\r\n";
+	XmlEncoderSet += "<CmdType>EncoderSet</CmdType>\r\n";
 	XmlEncoderSet += "<Result>0</Result>\r\n";
 	XmlEncoderSet += "<Privilege>"+ Privilege + "</Privilege>\r\n";
 	XmlEncoderSet += "</ControlResponse>\r\n";
@@ -3009,11 +3162,6 @@ void CSipMsgProcess::SipAlarmSubscribeNotify(char **dst,InfoServer m_InfoServer,
 	}	
 	osip_to_set_displayname(SipHeader->m_SipMsg.to,dstUserName);	
 	osip_to_set_url(SipHeader->m_SipMsg.to,SipHeader->m_SipMsg.uriServer);		
-	//osip_from_set_displayname(SipHeader->m_SipMsg.from,srcUserName);
-	//osip_from_set_tag(SipHeader->m_SipMsg.from,FromTag);//随机数
-	//osip_from_set_url(SipHeader->m_SipMsg.from,SipHeader->m_SipMsg.uriClient);	
-	//osip_to_set_displayname(SipHeader->m_SipMsg.to,dstUserName);	
-	//osip_to_set_url(SipHeader->m_SipMsg.to,SipHeader->m_SipMsg.uriServer);
 
 	osip_cseq_set_method(SipHeader->m_SipMsg.cseq,"NOTIFY");
 	osip_cseq_set_number(SipHeader->m_SipMsg.cseq,"1");
@@ -3096,76 +3244,76 @@ void CSipMsgProcess::SipAlarmSubscribeNotify(char **dst,InfoServer m_InfoServer,
 BOOL CSipMsgProcess::XmlAlarmCreate(char** strAlarmXml,char *srcXml)
 {
 	string strTemp(srcXml);	
-	string::size_type VariableStart;	
-	string::size_type VariableEnd;	
+	string::size_type CmdTypeStart;	
+	string::size_type CmdTypeEnd;	
 	HWND   hnd=::FindWindow(NULL, _T("UAC"));	
 	CUACDlg*  pWnd= (CUACDlg*)CWnd::FromHandle(hnd);
-	if( (VariableStart=strTemp.find("<Variable>",0)) ==string::npos)			
+	if( (CmdTypeStart=strTemp.find("<CmdType>",0)) ==string::npos)			
 	{
-		AfxMessageBox("报警，缺Variable字段");
+		AfxMessageBox("报警，缺CmdType字段");
 		return FALSE;
 	}					
-	if ( (VariableEnd=strTemp.find("</Variable>",VariableStart+1)) ==string::npos)		
+	if ( (CmdTypeEnd=strTemp.find("</CmdType>",CmdTypeStart+1)) ==string::npos)		
 	{
-		AfxMessageBox("报警，缺Variable字段");
+		AfxMessageBox("报警，缺/CmdType字段");
 		return FALSE;
 	}	
 	
-	if( (VariableStart=strTemp.find("<Privilege>",0)) ==string::npos)			
+	if( (CmdTypeStart=strTemp.find("<StartAlarmPriority>",0)) ==string::npos)			
 	{
-		AfxMessageBox("报警，缺Privilege字段");
+		AfxMessageBox("报警，缺StartAlarmPriority 字段");
 		return FALSE;
 	}							
-	if ( (VariableEnd=strTemp.find("</Privilege>",VariableStart+1)) ==string::npos)		
+	if ( (CmdTypeEnd=strTemp.find("</StartAlarmPriority>",CmdTypeStart+1)) ==string::npos)		
 	{
-		AfxMessageBox("报警，缺Privilege字段");
+		AfxMessageBox("报警，缺/StartAlarmPriority 字段");
 		return FALSE;
 	}	
 	InfoAlarm infoAlarm;
-	infoAlarm.UserCode = strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11);
+	infoAlarm.UserCode = strTemp.substr(CmdTypeStart+20,CmdTypeEnd-CmdTypeStart-20);
 	
- 	if( (VariableStart=strTemp.find("<Level>",0)) ==string::npos)			
+ 	if( (CmdTypeStart=strTemp.find("<EndAlarmPriority>",0)) ==string::npos)			
  		return FALSE;	
- 	if ( (VariableEnd=strTemp.find("</Level>",VariableStart+1)) ==string::npos)		
+ 	if ( (CmdTypeEnd=strTemp.find("</EndAlarmPriority>",CmdTypeStart+1)) ==string::npos)		
  		return FALSE;
- 	infoAlarm.Level = strTemp.substr(VariableStart+7,VariableEnd-VariableStart-7);
+ 	infoAlarm.Level = strTemp.substr(CmdTypeStart+18,CmdTypeEnd-CmdTypeStart-18);
 	
-	if( (VariableStart=strTemp.find("<AlarmType>",0)) ==string::npos)			
+	if( (CmdTypeStart=strTemp.find("<AlarmMethod>",0)) ==string::npos)			
 	{
-		AfxMessageBox("报警，缺AlarmType字段");
+		AfxMessageBox("报警，缺AlarmMethod 字段");
 		return FALSE;
 	}						
-	if ( (VariableEnd=strTemp.find("</AlarmType>",VariableStart+1)) ==string::npos)		
+	if ( (CmdTypeEnd=strTemp.find("</AlarmMethod>",CmdTypeStart+1)) ==string::npos)		
 	{
-		AfxMessageBox("报警，缺AlarmType字段");
+		AfxMessageBox("报警，缺/AlarmMethod 字段");
 		return FALSE;
 	}
-	infoAlarm.AlarmType=strTemp.substr(VariableStart+11,VariableEnd-VariableStart-11);
+	infoAlarm.AlarmType=strTemp.substr(CmdTypeStart+13,CmdTypeEnd-CmdTypeStart-13);
 	
-	if( (VariableStart=strTemp.find("<Address>",0)) ==string::npos)			
+	if( (CmdTypeStart=strTemp.find("<DeviceID>",0)) ==string::npos)			
 	{
-		AfxMessageBox("报警，缺Address字段");
+		AfxMessageBox("报警，缺DeviceID字段");
 		return FALSE;
 	}					
 	
-	if ( (VariableEnd=strTemp.find("</Address>",VariableStart+1)) ==string::npos)		
+	if ( (CmdTypeEnd=strTemp.find("</DeviceID>",CmdTypeStart+1)) ==string::npos)		
 	{
-		AfxMessageBox("报警，缺Address字段");
+		AfxMessageBox("报警，缺/DeviceID字段");
 		return FALSE;
 	}
-	infoAlarm.Address = strTemp.substr(VariableStart+9,VariableEnd-VariableStart-9);
+	infoAlarm.Address = strTemp.substr(CmdTypeStart+10,CmdTypeEnd-CmdTypeStart-10);
 	
- 	if( (VariableStart=strTemp.find("<AcceptIp>",0)) ==string::npos)			
+ 	if( (CmdTypeStart=strTemp.find("<StartTime>",0)) ==string::npos)			
  		return FALSE;						
- 	if ( (VariableEnd=strTemp.find("</AcceptIp>",VariableStart+1)) ==string::npos)		
+ 	if ( (CmdTypeEnd=strTemp.find("</StartTime>",CmdTypeStart+1)) ==string::npos)		
  		return FALSE;
- 	infoAlarm.AcceptIP = strTemp.substr(VariableStart+10,VariableEnd-VariableStart-10);
+ 	infoAlarm.AcceptIP = strTemp.substr(CmdTypeStart+11,CmdTypeEnd-CmdTypeStart-11);
  	
- 	if( (VariableStart=strTemp.find("<AcceptPort>",0)) ==string::npos)			
+ 	if( (CmdTypeStart=strTemp.find("<EndTime>",0)) ==string::npos)			
  		return FALSE;						
- 	if ( (VariableEnd=strTemp.find("</AcceptPort>",VariableStart+1)) ==string::npos)		
+ 	if ( (CmdTypeEnd=strTemp.find("</EndTime>",CmdTypeStart+1)) ==string::npos)		
  		return FALSE;
- 	infoAlarm.AcceptPort=strTemp.substr(VariableStart+12,VariableEnd-VariableStart-12);
+ 	infoAlarm.AcceptPort=strTemp.substr(CmdTypeStart+9,CmdTypeEnd-CmdTypeStart-9);
 	
 	//储存到vector m_InfoAlarm中
 	pWnd->m_InfoAlarm.push_back(infoAlarm);
@@ -3173,8 +3321,10 @@ BOOL CSipMsgProcess::XmlAlarmCreate(char** strAlarmXml,char *srcXml)
 	string XmlAlarmSet;
 	XmlAlarmSet="<?xml version=\"1.0\"?>\r\n";
 	XmlAlarmSet+="<Response>\r\n";
-	XmlAlarmSet+="<Variable>AlarmSubscribe</Variable>\r\n";	
-	XmlAlarmSet+="<Result>0</Result>\r\n";	
+	XmlAlarmSet+="<CmdType> Alarm </CmdType>\r\n";	
+	XmlAlarmSet += "<SN>17430</SN>\r\n";
+	XmlAlarmSet += "<DeviceID>" + infoAlarm.Address +"</DeviceID>\r\n";
+	XmlAlarmSet+="<Result>OK</Result>\r\n";	
 	XmlAlarmSet+="</Response>\r\n";
 	strcpy(*strAlarmXml,XmlAlarmSet.c_str());	
 	return TRUE;
@@ -3250,11 +3400,11 @@ void CSipMsgProcess::SipXmlMsg(char **dst,InfoServer m_InfoServer,InfoClient m_I
 	//osip_to_set_displayname(SipHeader->m_SipMsg.to,dstUserName);	
 	osip_to_set_url(SipHeader->m_SipMsg.to,SipHeader->m_SipMsg.uriServer);
 
-	osip_cseq_set_method(SipHeader->m_SipMsg.cseq,"DO");
+	osip_cseq_set_method(SipHeader->m_SipMsg.cseq,"Message");
 	osip_cseq_set_number(SipHeader->m_SipMsg.cseq,"1");
 
 	osip_message_set_uri(SipHeader->m_SipMsg.msg,SipHeader->m_SipMsg.uriServer);
-	osip_message_set_method(SipHeader->m_SipMsg.msg,"DO");
+	osip_message_set_method(SipHeader->m_SipMsg.msg,"Message");
 
 	osip_contact_set_url(SipHeader->m_SipMsg.contact,SipHeader->m_SipMsg.uriClient);
 	osip_contact_set_displayname(SipHeader->m_SipMsg.contact,srcUserName);
@@ -3282,23 +3432,8 @@ void CSipMsgProcess::SipXmlMsg(char **dst,InfoServer m_InfoServer,InfoClient m_I
 
 	osip_via_to_str(SipHeader->m_SipMsg.via,&dest);
 	osip_message_set_via(SipHeader->m_SipMsg.msg,dest);
-// 	CSipMsgProcess *Sip200=new CSipMsgProcess;
-// 	int i=osip_message_get_via(srcmsg,1,&Sip200->m_SipMsg.via);
-// 	CString st0;
-// 	if (1==i)
-// 	{
-// 
-// 		osip_via_to_str(Sip200->m_SipMsg.via,&dest);
-// 		osip_message_set_via(SipHeader->m_SipMsg.msg,dest);
-// 		st0=dest;
-// 		st0="Via: "+st0+"\r\n";		
-// 	}
-// 	else
-// 	{
-// 		st0="";
-// 	}
 	osip_free(dest);	
-	osip_message_set_content_type(SipHeader->m_SipMsg.msg,"Application/DDCP");
+	osip_message_set_content_type(SipHeader->m_SipMsg.msg,"Application/MANSCDP+XML");
 	osip_message_set_body(SipHeader->m_SipMsg.msg,Xml,strlen(Xml));
 	size_t length;	
 	osip_message_to_str(SipHeader->m_SipMsg.msg,&dest,&length);	
@@ -3517,21 +3652,6 @@ void CSipMsgProcess::SipNotifyXmlMsg(char **dst,InfoServer m_InfoServer,InfoClie
 
 	osip_via_to_str(SipHeader->m_SipMsg.via,&dest);
 	osip_message_set_via(SipHeader->m_SipMsg.msg,dest);
-// 	CSipMsgProcess *Sip200=new CSipMsgProcess;
-// 	int i=osip_message_get_via(srcmsg,1,&Sip200->m_SipMsg.via);
-// 	CString st0;
-// 	if (1==i)
-// 	{
-// 
-// 		osip_via_to_str(Sip200->m_SipMsg.via,&dest);
-// 		osip_message_set_via(SipHeader->m_SipMsg.msg,dest);
-// 		st0=dest;
-// 		st0="Via: "+st0+"\r\n";		
-// 	}
-// 	else
-// 	{
-// 		st0="";
-// 	}
 	osip_free(dest);	
 	osip_message_set_content_type(SipHeader->m_SipMsg.msg,"Application/DDCP");
 	osip_message_set_body(SipHeader->m_SipMsg.msg,Xml,strlen(Xml));
@@ -3596,8 +3716,6 @@ BOOL CSipMsgProcess::SipVerify(InfoServer m_InfoServer,InfoClient m_InfoClient,o
 	}
 	if ( nto==1 )
 	{
-		//strcmp(srcUserName,srcMsg->from->displayname)==0 &&
-		//strcmp(dstUserName,srcMsg->to->displayname)==0 &&
 		if ( strcmp(srcCode,srcMsg->from->url->username)==0 &&			
 			strcmp(srcIP,srcMsg->from->url->host)==0 &&
 			strcmp(srcPort,srcMsg->from->url->port)==0 &&
@@ -3610,8 +3728,6 @@ BOOL CSipMsgProcess::SipVerify(InfoServer m_InfoServer,InfoClient m_InfoClient,o
 	}
 	else if ( nto==0 )
 	{
-		//strcmp(dstUserName,srcMsg->from->displayname)==0 &&
-			//strcmp(srcUserName,srcMsg->to->displayname)==0 &&
 		if ( strcmp(dstCode,srcMsg->from->url->username)==0 && 			
 			strcmp(dstIP,srcMsg->from->url->host)==0 &&
 			strcmp(dstPort,srcMsg->from->url->port)==0 &&
@@ -3675,9 +3791,7 @@ BOOL CSipMsgProcess::RegisterSipVerify(InfoServer m_InfoServer,InfoClient m_Info
 	}
 	switch (nto)
 	{
-	case 0://验证InfoServer
-		//strcmp(dstUserName,srcMsg->from->displayname)==0 &&
-		//strcmp(srcUserName,srcMsg->to->displayname)==0 &&
+	case 0:
 		if (strcmp(dstCode, srcMsg->from->url->username) == 0 &&
 			strcmp(dstIP, srcMsg->from->url->host) == 0 &&
 			strcmp(dstPort, srcMsg->from->url->port) == 0 &&
@@ -3688,9 +3802,7 @@ BOOL CSipMsgProcess::RegisterSipVerify(InfoServer m_InfoServer,InfoClient m_Info
 			return TRUE;
 		}
 		break;
-	case 1://验证InfoClient
-		//strcmp(srcUserName,srcMsg->from->displayname)==0 &&
-		//strcmp(dstUserName,srcMsg->to->displayname)==0 &&
+	case 1:
 		if (strcmp(srcCode, srcMsg->from->url->username) == 0 &&
 			strcmp(srcIP, srcMsg->from->url->host) == 0 &&
 			strcmp(srcPort, srcMsg->from->url->port) == 0 &&
@@ -3712,7 +3824,7 @@ int CSipMsgProcess::CreateXMLptzPreBitQuery_c(char **dstXML,int begin,int end)
 	strTemp+="<Response>\r\n";
 	strTemp+="<QueryResponse>\r\n";
 
-	strTemp+="<Variable>PresetList</Variable>\r\n";
+	strTemp+="<CmdType>PresetList</CmdType>\r\n";
 	strTemp+="<Result>0</Result>\r\n";	
 	strTemp+="<RealPresetNum>49</RealPresetNum>\r\n";
     CString cst;
@@ -3721,12 +3833,7 @@ int CSipMsgProcess::CreateXMLptzPreBitQuery_c(char **dstXML,int begin,int end)
 
 	cst.Format("%d", 49-end);
 	strTemp += "<RemainPresetNum>"+cst+"</RemainPresetNum>\r\n";
-	//strTemp+="<FromIndex>"+cst+"</FromIndex>\r\n";
-	//cst.Format("%d",end);
-	//strTemp+="<ToIndex>"+cst+"</ToIndex>\r\n";
-// 	strTemp+="<FromIndex>1</FromIndex>\r\n";	
-// 	strTemp+="<ToIndex>2</ToIndex>\r\n";
-	//strTemp+="<RemainPresetNum>0</RemainPresetNum>\r\n";
+
 	strTemp+="<PresetInfoList>\r\n";
 
 	for (int i=(begin-1)*4;i<end*4;i++)
@@ -3747,7 +3854,7 @@ int CSipMsgProcess::CreateXMLVideoQuery(char **dstXML)
 	strTemp="<?xml version=\"1.0\"?>\r\n";
 	strTemp+="<Response>\r\n";
 	strTemp+="<QueryResponse>\r\n";
-	strTemp+="<Variable>FileList</Variable>\r\n";
+	strTemp+="<CmdType>FileList</CmdType>\r\n";
 	strTemp+="<Result>0</Result>\r\n";	
 	strTemp+="<RealFileNum>49</RealFileNum>\r\n";
 	strTemp+="<FromIndex>1</FromIndex>\r\n";
@@ -3805,26 +3912,16 @@ int CSipMsgProcess::CreateXMLVideoQuery_c(char **dstXML,int begin,int end)
 	strTemp="<?xml version=\"1.0\"?>\r\n";
 	strTemp+="<Response>\r\n";
 	strTemp+="<QueryResponse>\r\n";
-	strTemp+="<Variable>FileList</Variable>\r\n";
+	strTemp+="<CmdType>FileList</CmdType>\r\n";
 	strTemp+="<Result>0</Result>\r\n";	
 	strTemp+="<RealFileNum>2</RealFileNum>\r\n";
 	CString cst;
 	
-	/*cst.Format("%d",begin);
-	strTemp+="<FromIndex>"+cst+"</FromIndex>\r\n";
-	cst.Format("%d",end);
-	strTemp+="<ToIndex>"+cst+"</ToIndex>\r\n";
-	//strTemp+="<DecoderTag>Manufacturer=H3C ver=V30</DecoderTag>\r\n";
-	*/
 	cst.Format("%d",end- begin);
 	//strTemp += "<SendFileNum>" + cst + "</SendFileNum>\r\n";
 	strTemp += "<SendFileNum>2</SendFileNum>\r\n";
 	strTemp+="<FileInfoList>\r\n";
 
-	//for (int i=begin*6;i<end*6;i++)
-	//{
-	//	strTemp+=HistoryVideoList[i]+"\r\n";
-	//}
  	strTemp+="<Item>\r\n";
  	strTemp+="<Name>xiaoshan_20051101001.mp4</Name>\r\n";
  	strTemp+="<CreationTime>2017-06-06T01:00:00Z</CreationTime>\r\n";
@@ -3838,34 +3935,6 @@ int CSipMsgProcess::CreateXMLVideoQuery_c(char **dstXML,int begin,int end)
 	strTemp += "<LastWriteTime>2017-06-07T12:30:00Z</LastWriteTime>\r\n";
 	strTemp += "<FileSize>500000</FileSize>\r\n";
 	strTemp += "</Item>\r\n";
-// 
-// 	strTemp+="<Item>\r\n";
-// 	strTemp+="<Name>xiaoshan_20051101002.mp4</Name>\r\n";
-// 	strTemp+="<BeginTime>20051110T133050Z</BeginTime>\r\n";
-// 	strTemp+="<EndTime>20051110T134050Z</EndTime>\r\n";
-// 	strTemp+="<FileSize>500000</FileSize>\r\n";	
-// 	strTemp+="</Item>\r\n";
-// 
-// 	strTemp+="<Item>\r\n";
-// 	strTemp+="<Name>0603_000328_091112_122000.ts</Name>\r\n";
-// 	strTemp+="<CreationTime>2009-11-12T12:20:00Z</CreationTime>\r\n";
-// 	strTemp+="<LastWriteTime>2009-11-12T12:30:00Z</LastWriteTime>\r\n";
-// 	strTemp+="<FileSize>500000</FileSize>\r\n";	
-// 	strTemp+="</Item>\r\n";
-// 
-// 	strTemp+="<Item>\r\n";
-// 	strTemp+="<Name>0603_000328_091112_123000.ts</Name>\r\n";
-// 	strTemp+="<CreationTime>2009-11-12T12:30:00Z</CreationTime>\r\n";
-// 	strTemp+="<LastWriteTime>2009-11-12T12:40:00Z</LastWriteTime>\r\n";
-// 	strTemp+="<FileSize>500000</FileSize>\r\n";	
-// 	strTemp+="</Item>\r\n";
-// 
-// 	strTemp+="<Item>\r\n";
-// 	strTemp+="<Name>0603_000328_091112_124000.ts</Name>\r\n";
-// 	strTemp+="<CreationTime>2009-11-12T12:40:00Z</CreationTime>\r\n";
-// 	strTemp+="<LastWriteTime>2009-11-12T12:50:00Z</LastWriteTime>\r\n";
-// 	strTemp+="<FileSize>500000</FileSize>\r\n";	
-// 	strTemp+="</Item>\r\n";
 
 	strTemp+="</FileInfoList>\r\n";
 	strTemp+="</QueryResponse>\r\n";
@@ -3881,59 +3950,14 @@ int CSipMsgProcess::CreateXMLVideoQuery_h(char ** dstXML, CTime begin, CTime end
 	strTemp = "<?xml version=\"1.0\"?>\r\n";
 	strTemp += "<Response>\r\n";
 	strTemp += "<QueryResponse>\r\n";
-	strTemp += "<Variable>FileList</Variable>\r\n";
+	strTemp += "<CmdType>FileList</CmdType>\r\n";
 	strTemp += "<Result>0</Result>\r\n";
 	strTemp += "<RealFileNum>1</RealFileNum>\r\n";
 	CString cst;
 
-	/*cst.Format("%d",begin);
-	strTemp+="<FromIndex>"+cst+"</FromIndex>\r\n";
-	cst.Format("%d",end);
-	strTemp+="<ToIndex>"+cst+"</ToIndex>\r\n";
-	//strTemp+="<DecoderTag>Manufacturer=H3C ver=V30</DecoderTag>\r\n";
-	*/
 	cst.Format("%d", end - begin);
 	strTemp += "<SendFileNum>" + cst + "</SendFileNum>\r\n";
 	strTemp += "<FileInfoList>\r\n";
-
-	//for (int i = (begin - 1) * 6; i<end * 6; i++)
-	//{
-	//	strTemp += HistoryVideoList[i] + "\r\n";
-	//}
-	// 	strTemp+="<Item>\r\n";
-	// 	strTemp+="<Name>xiaoshan_20051101001.mp4</Name>\r\n";
-	// 	strTemp+="<BeginTime>20051110T132050Z</BeginTime>\r\n";
-	// 	strTemp+="<EndTime>20051110T133050Z</EndTime>\r\n";
-	// 	strTemp+="<FileSize>500000</FileSize>\r\n";	
-	// 	strTemp+="</Item>\r\n";
-	// 
-	// 	strTemp+="<Item>\r\n";
-	// 	strTemp+="<Name>xiaoshan_20051101002.mp4</Name>\r\n";
-	// 	strTemp+="<BeginTime>20051110T133050Z</BeginTime>\r\n";
-	// 	strTemp+="<EndTime>20051110T134050Z</EndTime>\r\n";
-	// 	strTemp+="<FileSize>500000</FileSize>\r\n";	
-	// 	strTemp+="</Item>\r\n";
-	// 
-	// 	strTemp+="<Item>\r\n";
-	// 	strTemp+="<Name>0603_000328_091112_122000.ts</Name>\r\n";
-	// 	strTemp+="<CreationTime>2009-11-12T12:20:00Z</CreationTime>\r\n";
-	// 	strTemp+="<LastWriteTime>2009-11-12T12:30:00Z</LastWriteTime>\r\n";
-	// 	strTemp+="<FileSize>500000</FileSize>\r\n";	
-	// 	strTemp+="</Item>\r\n";
-	// 
-	// 	strTemp+="<Item>\r\n";
-	// 	strTemp+="<Name>0603_000328_091112_123000.ts</Name>\r\n";
-	// 	strTemp+="<CreationTime>2009-11-12T12:30:00Z</CreationTime>\r\n";
-	// 	strTemp+="<LastWriteTime>2009-11-12T12:40:00Z</LastWriteTime>\r\n";
-	// 	strTemp+="<FileSize>500000</FileSize>\r\n";	
-	// 	strTemp+="</Item>\r\n";
-	// 
-	// 	strTemp+="<Item>\r\n";
-	// 	strTemp+="<Name>0603_000328_091112_124000.ts</Name>\r\n";
-	// 	strTemp+="<CreationTime>2009-11-12T12:40:00Z</CreationTime>\r\n";
-	// 	strTemp+="<LastWriteTime>2009-11-12T12:50:00Z</LastWriteTime>\r\n";
-	// 	strTemp+="<FileSize>500000</FileSize>\r\n";	
-	// 	strTemp+="</Item>\r\n";
 
 	strTemp += "</FileInfoList>\r\n";
 	strTemp += "</QueryResponse>\r\n";
@@ -3952,7 +3976,7 @@ int CSipMsgProcess::CreateXMLCatalogQuery(char **dstXML)
 	strTemp = "<?xml version=\"1.0\"?>\r\n";
 	strTemp += "<Response>\r\n";
 	strTemp += "<QueryResponse>\r\n";
-	strTemp += "<Variable>ItemList</Variable>\r\n";
+	strTemp += "<CmdType>ItemList</CmdType>\r\n";
 	strTemp += "<Parent>"+pWnd->m_InfoClient.UserAddress+"</Parent>\r\n";	
 	strTemp += "<TotalSubNum>30</TotalSubNum>\r\n";
 	strTemp += "<TotalOnlineSubNum>3</TotalOnlineSubNum>\r\n";
@@ -4024,53 +4048,64 @@ int CSipMsgProcess::CreateXMLCatalogQuery(char **dstXML)
 
 int CSipMsgProcess::CreateXMLCatalogQueryNote(char **dstXML)
 {
-	CString strTemp;
-	strTemp = "<?xml version=\"1.0\"?>\r\n";
+	CString strTemp = "<?xml version=\"1.0\"?>\r\n";
 	strTemp += "<Response>\r\n";
-	strTemp += "<QueryResponse>\r\n";
-	strTemp += "<Variable>ItemList</Variable>\r\n";
-	strTemp += "<Parent>0</Parent>\r\n";	
-	strTemp += "<TotalSubNum>45</TotalSubNum>\r\n";
-	strTemp += "<TotalOnlineSubNum>2</TotalOnlineSubNum>\r\n";
-	strTemp += "<FromIndex>1</FromIndex>\r\n";
-	strTemp += "<ToIndex>2</ToIndex>\r\n";
-	strTemp += "<SubNum>2</SubNum>\r\n";
-	strTemp += "<SubList>\r\n";
-
+	strTemp += "<CmdType>Catalog</CmdType>\r\n";
+	strTemp += "<SN>17430</SN>\r\n";
+	strTemp += "<DeviceID>011021100001</DeviceID>\r\n";
+	strTemp += "<SumNum>100</SumNum>\r\n";
+	strTemp += "<DeviceList Num=2>\r\n";
 	strTemp += "<Item>\r\n";
-	strTemp += "<Name>IPC 01</Name>\r\n";
-	strTemp += "<Address>252000001111002001</Address>\r\n";
-	strTemp += "<ResType>1</ResType>\r\n";
-	strTemp += "<ResSubType>1</ResSubType>\r\n";
-	strTemp += "<Privilege>321345</Privilege>\r\n";
-	strTemp += "<Status>1</Status>\r\n";
-	strTemp += "<Longitude>23</Longitude>\r\n";
-	strTemp += "<Latitude></Latitude>\r\n";
-	strTemp += "<Elevation>532</Elevation>\r\n";
-	strTemp += "<Roadway>523</Roadway>\r\n";
-	strTemp += "<PileNo>245</PileNo>\r\n";
-	strTemp += "<AreaNo>531</AreaNo>\r\n";
-	strTemp += "<UpdateTime>20170222T130000Z</UpdateTime>\r\n";
+	strTemp += "<DeviceID>64010000001330000001</DeviceID>\r\n";
+	strTemp += "<Name>Camera1</Name>\r\n";
+	strTemp += "<Manufacturer>Manufacturer1</Manufacturer>\r\n";
+	strTemp += "<Model>Model1</Model>\r\n";
+	strTemp += "<Owner>Owner1</Owner>\r\n";
+	strTemp += "<CivilCode>CivilCode1</CivilCode>\r\n";
+	strTemp += "<Block>Block1</Block>\r\n";
+	strTemp += "<Address>Address1</Address>\r\n";
+	strTemp += "<Parental>1</Parental>\r\n";
+	strTemp += "<ParentID>011021100001</ParentID>\r\n";
+	strTemp += "<SafetyWay>0</SafetyWay>\r\n";
+	strTemp += "<RegisterWay>1</RegisterWay>\r\n";
+	strTemp += "<CertNum>CertNum1</CertNum>\r\n";
+	strTemp += "<Certifiable>0</Certifiable>\r\n";
+	strTemp += "<ErrCode>400</ErrCode>\r\n";
+	strTemp += "<EndTime>2010-11-11T19:46:17</EndTime>\r\n";
+	strTemp += "<Secrecy>0</Secrecy>\r\n";
+	strTemp += "<IPAddress>192.168.3.81</IPAddress>\r\n";
+	strTemp += "<Port>5060</Port>\r\n";
+	strTemp += "<Password>Password1</Password>\r\n";
+	strTemp += "<Status>Status1</Status>\r\n";
+	strTemp += "<Longitude>171.3</Longitude>\r\n";
+	strTemp += "<Latitude>34.2</Latitude>\r\n";
 	strTemp += "</Item>\r\n";
-
 	strTemp += "<Item>\r\n";
-	strTemp += "<Name>IPC 02</Name>\r\n";
-	strTemp += "<Address>252000001112002001</Address>\r\n";
-	strTemp += "<ResType>4</ResType>\r\n";
-	strTemp += "<ResSubType>5</ResSubType>\r\n";
-	strTemp += "<Privilege>34565</Privilege>\r\n";
-	strTemp += "<Status>5</Status>\r\n";
-	strTemp += "<Longitude>54</Longitude>\r\n";
-	strTemp += "<Latitude>453</Latitude>\r\n";
-	strTemp += "<Elevation>35</Elevation>\r\n";
-	strTemp += "<Roadway>42</Roadway>\r\n";
-	strTemp += "<PileNo>52</PileNo>\r\n";
-	strTemp += "<AreaNo>25</AreaNo>\r\n";
-	strTemp += "<UpdateTime>20170222T130000Z</UpdateTime>\r\n";
+	strTemp += "<DeviceID>64010000001330000002</DeviceID>\r\n";
+	strTemp += "<Name>Camera2</Name>\r\n";
+	strTemp += "<Manufacturer>Manufacturer2</Manufacturer>\r\n";
+	strTemp += "<Model>Model2</Model>\r\n";
+	strTemp += "<Owner>Owner2</Owner>\r\n";
+	strTemp += "<CivilCode>CivilCode2</CivilCode>\r\n";
+	strTemp += "<Block>Block2</Block>\r\n";
+	strTemp += "<Address>Address2</Address>\r\n";
+	strTemp += "<Parental>1</Parental>\r\n";
+	strTemp += "<ParentID>011021100001</ParentID>\r\n";
+	strTemp += "<SafetyWay>0</SafetyWay>\r\n";
+	strTemp += "<RegisterWay>1</RegisterWay>\r\n";
+	strTemp += "<CertNum>CertNum1</CertNum>\r\n";
+	strTemp += "<Certifiable>0</Certifiable>\r\n";
+	strTemp += "<ErrCode>400</ErrCode>\r\n";
+	strTemp += "<EndTime>2010-11-11T19:46:17</EndTime>\r\n";
+	strTemp += "<Secrecy>0</Secrecy>\r\n";
+	strTemp += "<IPAddress>192.168.3.81</IPAddress>\r\n";
+	strTemp += "<Port>5060</Port>\r\n";
+	strTemp += "<Password>Password1</Password>\r\n";
+	strTemp += "<Status>Status1</Status>\r\n";
+	strTemp += "<Longitude>171.4</Longitude>\r\n";
+	strTemp += "<Latitude>34.2</Latitude>\r\n";
 	strTemp += "</Item>\r\n";
-
-	strTemp += "</SubList>\r\n";
-	strTemp += "</QueryResponse>\r\n";
+	strTemp += "</DeviceList>\r\n";
 	strTemp += "</Response>\r\n";
 
 	char *dst=(LPSTR)(LPCTSTR)strTemp;	
@@ -4078,25 +4113,381 @@ int CSipMsgProcess::CreateXMLCatalogQueryNote(char **dstXML)
 	return 0;
 }
 
-int CSipMsgProcess::CreateXMLDeviceInfQuery(char **dstXML)
+void CSipMsgProcess::SipCatalogQueryXml(char **dst, InfoServer m_InfoServer, InfoClient m_InfoClient, char *Xml, osip_uri_param_t *FromTag)
+{
+	char ToTag[50];
+	char CallID[50];
+	//远程配置信息
+	char *dstCode = (LPSTR)(LPCTSTR)m_InfoClient.UserAddress;
+	char *dstUserName = (LPSTR)(LPCTSTR)m_InfoClient.UserName;
+	char *dstIP = (LPSTR)(LPCTSTR)m_InfoClient.IP;
+	char *dstPort = (LPSTR)(LPCTSTR)m_InfoClient.Port;
+	//本地配置信息
+	char *srcCode = (LPSTR)(LPCTSTR)m_InfoServer.UserAddress;
+	char *srcUserName = (LPSTR)(LPCTSTR)m_InfoServer.UserName;
+	char *srcIP = (LPSTR)(LPCTSTR)m_InfoServer.IP;
+	char *srcPort = (LPSTR)(LPCTSTR)m_InfoServer.Port;
+
+	int RandData;
+	srand((unsigned int)time(0));
+	RandData = rand();
+	char str[8];
+	itoa(RandData, str, 10);
+	strcpy(ToTag, str);
+	RandData = rand();
+	itoa(RandData, str, 10);
+	strcpy(CallID, str);
+
+	char *dest;
+	CSipMsgProcess *SipHeader = new CSipMsgProcess;
+	////////////////////////
+	osip_uri_set_host(SipHeader->m_SipMsg.uriServer, dstIP);
+	osip_uri_set_scheme(SipHeader->m_SipMsg.uriServer, "sip");
+	osip_uri_set_username(SipHeader->m_SipMsg.uriServer, dstCode);
+	osip_uri_set_port(SipHeader->m_SipMsg.uriServer, dstPort);
+
+	osip_uri_set_host(SipHeader->m_SipMsg.uriClient, srcIP);
+	osip_uri_set_scheme(SipHeader->m_SipMsg.uriClient, "sip");
+	osip_uri_set_username(SipHeader->m_SipMsg.uriClient, srcCode);
+	osip_uri_set_port(SipHeader->m_SipMsg.uriClient, srcPort);
+
+	osip_via_set_version(SipHeader->m_SipMsg.via, "2.0");
+	osip_via_set_protocol(SipHeader->m_SipMsg.via, "UDP");
+	osip_via_set_port(SipHeader->m_SipMsg.via, srcPort);
+	//RandData=rand();	
+	//char sdtr[8];	
+	//char branch[20];
+	//itoa(RandData,sdtr,16);
+	//strcpy(branch,"z9hG4bK-");
+	//strcat(branch,sdtr);
+	char branch[20] = "z9hG4bK";
+	for (int i = 0; i < 8; i++)
+	{
+		RandData = rand() % 10;
+		branch[i + 7] = RandData + '0';
+	}
+	osip_via_set_branch(SipHeader->m_SipMsg.via, branch);//随机数
+	osip_via_set_host(SipHeader->m_SipMsg.via, srcIP);
+
+	//osip_call_id_set_host(SipHeader->m_SipMsg.callid, srcIP);
+	osip_call_id_set_number(SipHeader->m_SipMsg.callid, CallID);//随机数	
+																//osip_from_set_displayname(SipHeader->m_SipMsg.from,srcUserName);
+	osip_from_set_tag(SipHeader->m_SipMsg.from, FromTag->gvalue);//随机数
+	osip_to_set_tag(SipHeader->m_SipMsg.to, ToTag);//随机数
+	osip_from_set_url(SipHeader->m_SipMsg.from, SipHeader->m_SipMsg.uriClient);
+
+	//osip_to_set_displayname(SipHeader->m_SipMsg.to,dstUserName);	
+	osip_to_set_url(SipHeader->m_SipMsg.to, SipHeader->m_SipMsg.uriServer);
+
+	osip_cseq_set_method(SipHeader->m_SipMsg.cseq, "Message");
+	osip_cseq_set_number(SipHeader->m_SipMsg.cseq, "1");
+
+	osip_message_set_uri(SipHeader->m_SipMsg.msg, SipHeader->m_SipMsg.uriServer);
+	osip_message_set_method(SipHeader->m_SipMsg.msg, "Message");
+
+	osip_contact_set_url(SipHeader->m_SipMsg.contact, SipHeader->m_SipMsg.uriClient);
+	osip_contact_set_displayname(SipHeader->m_SipMsg.contact, srcUserName);
+
+	osip_to_to_str(SipHeader->m_SipMsg.to, &dest);
+	osip_message_set_to(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_call_id_to_str(SipHeader->m_SipMsg.callid, &dest);
+	osip_message_set_call_id(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_from_to_str(SipHeader->m_SipMsg.from, &dest);
+	osip_message_set_from(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_contact_to_str(SipHeader->m_SipMsg.contact, &dest);
+	osip_message_set_contact(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_cseq_to_str(SipHeader->m_SipMsg.cseq, &dest);
+	osip_message_set_cseq(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_via_to_str(SipHeader->m_SipMsg.via, &dest);
+	osip_message_set_via(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+	osip_message_set_content_type(SipHeader->m_SipMsg.msg, "Application/MANSCDP+XML");
+	osip_message_set_body(SipHeader->m_SipMsg.msg, Xml, strlen(Xml));
+	size_t length;
+	osip_message_set_max_forwards(SipHeader->m_SipMsg.msg, "70");
+	osip_message_to_str(SipHeader->m_SipMsg.msg, &dest, &length);
+
+	strcpy(*dst, dest);
+	osip_free(dest);
+}
+
+int CSipMsgProcess::CreateXMLDeviceStatusQueryNode(char ** dstXML)
+{
+	CString strTemp = "<?xml version=\"1.0\"?>\r\n";
+	strTemp += "<?xmlversion=”1.0”?>\r\n";
+	strTemp += "<Response>\r\n";
+	strTemp += "<CmdType>DeviceStatus</CmdType>\r\n";
+	strTemp += "<SN>248</SN>\r\n";
+	strTemp += "<DeviceID>34020000001130000001</DeviceID>\r\n";
+	strTemp += "<Result>OK</Result>\r\n";
+	strTemp += "<Online>ONLINE</Online>\r\n";
+	strTemp += "<Status>OK</Status>\r\n";
+	strTemp += "<Encode>ON</Encode>\r\n";
+	strTemp += "<Record>OFF</Record>\r\n";
+	strTemp += "<DeviceTime>2010-11-11T19:46:17</DeviceTime>\r\n";
+	strTemp += "<AlarmstatusNum=2>\r\n";
+	strTemp += "<Item>\r\n";
+	strTemp += "<DeviceID>34020000001340000001</DeviceID>\r\n";
+	strTemp += "<DutyStatus>OFFDUTY</DutyStatus>\r\n";
+	strTemp += "</Item>\r\n";
+	strTemp += "<Item>\r\n";
+	strTemp += "<DeviceID>34020000001340000002</DeviceID>\r\n";
+	strTemp += "<DutyStatus>OFFDUTY</DutyStatus>\r\n";
+	strTemp += "</Item>\r\n";
+	strTemp += "</Alarmstatus>\r\n";
+	strTemp += "</Response>\r\n";
+
+	char *dst = (LPSTR)(LPCTSTR)strTemp;
+	strcpy(*dstXML, dst);
+	return 0;
+}
+
+void CSipMsgProcess::SipDeviceStatusQueryXml(char ** dst, InfoServer m_InfoServer, InfoClient m_InfoClient, char * Xml, osip_uri_param_t * FromTag)
+{
+	char ToTag[50];
+	char CallID[50];
+	//远程配置信息
+	char *dstCode = (LPSTR)(LPCTSTR)m_InfoClient.UserAddress;
+	char *dstUserName = (LPSTR)(LPCTSTR)m_InfoClient.UserName;
+	char *dstIP = (LPSTR)(LPCTSTR)m_InfoClient.IP;
+	char *dstPort = (LPSTR)(LPCTSTR)m_InfoClient.Port;
+	//本地配置信息
+	char *srcCode = (LPSTR)(LPCTSTR)m_InfoServer.UserAddress;
+	char *srcUserName = (LPSTR)(LPCTSTR)m_InfoServer.UserName;
+	char *srcIP = (LPSTR)(LPCTSTR)m_InfoServer.IP;
+	char *srcPort = (LPSTR)(LPCTSTR)m_InfoServer.Port;
+
+	int RandData;
+	srand((unsigned int)time(0));
+	RandData = rand();
+	char str[8];
+	itoa(RandData, str, 10);
+	strcpy(ToTag, str);
+	RandData = rand();
+	itoa(RandData, str, 10);
+	strcpy(CallID, str);
+
+	char *dest;
+	CSipMsgProcess *SipHeader = new CSipMsgProcess;
+	////////////////////////
+	osip_uri_set_host(SipHeader->m_SipMsg.uriServer, dstIP);
+	osip_uri_set_scheme(SipHeader->m_SipMsg.uriServer, "sip");
+	osip_uri_set_username(SipHeader->m_SipMsg.uriServer, dstCode);
+	osip_uri_set_port(SipHeader->m_SipMsg.uriServer, dstPort);
+
+	osip_uri_set_host(SipHeader->m_SipMsg.uriClient, srcIP);
+	osip_uri_set_scheme(SipHeader->m_SipMsg.uriClient, "sip");
+	osip_uri_set_username(SipHeader->m_SipMsg.uriClient, srcCode);
+	osip_uri_set_port(SipHeader->m_SipMsg.uriClient, srcPort);
+
+	osip_via_set_version(SipHeader->m_SipMsg.via, "2.0");
+	osip_via_set_protocol(SipHeader->m_SipMsg.via, "UDP");
+	osip_via_set_port(SipHeader->m_SipMsg.via, srcPort);
+	//RandData=rand();	
+	//char sdtr[8];	
+	//char branch[20];
+	//itoa(RandData,sdtr,16);
+	//strcpy(branch,"z9hG4bK-");
+	//strcat(branch,sdtr);
+	char branch[20] = "z9hG4bK";
+	for (int i = 0; i < 8; i++)
+	{
+		RandData = rand() % 10;
+		branch[i + 7] = RandData + '0';
+	}
+	osip_via_set_branch(SipHeader->m_SipMsg.via, branch);//随机数
+	osip_via_set_host(SipHeader->m_SipMsg.via, srcIP);
+
+	//osip_call_id_set_host(SipHeader->m_SipMsg.callid, srcIP);
+	osip_call_id_set_number(SipHeader->m_SipMsg.callid, CallID);//随机数	
+																//osip_from_set_displayname(SipHeader->m_SipMsg.from,srcUserName);
+	osip_from_set_tag(SipHeader->m_SipMsg.from, FromTag->gvalue);//随机数
+	osip_to_set_tag(SipHeader->m_SipMsg.to, ToTag);//随机数
+	osip_from_set_url(SipHeader->m_SipMsg.from, SipHeader->m_SipMsg.uriClient);
+
+	//osip_to_set_displayname(SipHeader->m_SipMsg.to,dstUserName);	
+	osip_to_set_url(SipHeader->m_SipMsg.to, SipHeader->m_SipMsg.uriServer);
+
+	osip_cseq_set_method(SipHeader->m_SipMsg.cseq, "Message");
+	osip_cseq_set_number(SipHeader->m_SipMsg.cseq, "1");
+
+	osip_message_set_uri(SipHeader->m_SipMsg.msg, SipHeader->m_SipMsg.uriServer);
+	osip_message_set_method(SipHeader->m_SipMsg.msg, "Message");
+
+	osip_contact_set_url(SipHeader->m_SipMsg.contact, SipHeader->m_SipMsg.uriClient);
+	osip_contact_set_displayname(SipHeader->m_SipMsg.contact, srcUserName);
+
+	osip_to_to_str(SipHeader->m_SipMsg.to, &dest);
+	osip_message_set_to(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_call_id_to_str(SipHeader->m_SipMsg.callid, &dest);
+	osip_message_set_call_id(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_from_to_str(SipHeader->m_SipMsg.from, &dest);
+	osip_message_set_from(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_contact_to_str(SipHeader->m_SipMsg.contact, &dest);
+	osip_message_set_contact(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_cseq_to_str(SipHeader->m_SipMsg.cseq, &dest);
+	osip_message_set_cseq(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_via_to_str(SipHeader->m_SipMsg.via, &dest);
+	osip_message_set_via(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+	osip_message_set_content_type(SipHeader->m_SipMsg.msg, "Application/MANSCDP+XML");
+	osip_message_set_body(SipHeader->m_SipMsg.msg, Xml, strlen(Xml));
+	size_t length;
+	osip_message_set_max_forwards(SipHeader->m_SipMsg.msg, "70");
+	osip_message_to_str(SipHeader->m_SipMsg.msg, &dest, &length);
+
+	strcpy(*dst, dest);
+	osip_free(dest);
+}
+
+int CSipMsgProcess::CreateXMLDeviceInfoQueryNode(char **dstXML)
 {
 	CString strTemp;
 	strTemp = "<?xml version=\"1.0\"?>\r\n";
 	strTemp += "<Response>\r\n";
-	strTemp += "<QueryResponse>\r\n";
-	strTemp += "<Variable>DeviceInfo</Variable>\r\n";
-	strTemp += "<Result>0</Result>\r\n";
-	//strTemp += "<Manufacturer>uniview</Manufacturer>\r\n";	 
-	//strTemp += "<Model>ECR3316</Model> \r\n";
-	//strTemp += "<Firmware>2.1.3.16</Firmware>\r\n";
-	//strTemp += "<MaxCamera>16</MaxCamera>\r\n";
-	strTemp += "<Status>0</Result>\r\n";
-	strTemp += "</QueryResponse>\r\n";
+	strTemp += "<CmdType>DeviceInfo</CmdType>\r\n";
+	strTemp += "<SN>17430</SN>\r\n";
+	strTemp += "<DeviceID>64010000001110000001</DeviceID>\r\n";
+	strTemp += "<Result>OK</Result>\r\n";
+	strTemp += "<DeviceType>DVR</DeviceType>\r\n";
+	strTemp += "<Manufacturer>Tiandy</Manufacturer>\r\n";
+	strTemp += "<Model>TC-2808AN-HD</Model>\r\n";
+	strTemp += "<Firmware>V2.1,build091111</Firmware>\r\n";
+	strTemp += "<MaxCamera>8</MaxCamera>\r\n";
+	strTemp += "<MaxAlarm>16</MaxAlarm>\r\n";
 	strTemp += "</Response>\r\n";
 
 	char *dst=(LPSTR)(LPCTSTR)strTemp;	
 	strcpy(*dstXML,dst);
 	return 0;
+}
+
+void CSipMsgProcess::SipDeviceInfoQueryXml(char ** dst, InfoServer m_InfoServer, InfoClient m_InfoClient, char * Xml, osip_uri_param_t * FromTag)
+{
+	char ToTag[50];
+	char CallID[50];
+	//远程配置信息
+	char *dstCode = (LPSTR)(LPCTSTR)m_InfoClient.UserAddress;
+	char *dstUserName = (LPSTR)(LPCTSTR)m_InfoClient.UserName;
+	char *dstIP = (LPSTR)(LPCTSTR)m_InfoClient.IP;
+	char *dstPort = (LPSTR)(LPCTSTR)m_InfoClient.Port;
+	//本地配置信息
+	char *srcCode = (LPSTR)(LPCTSTR)m_InfoServer.UserAddress;
+	char *srcUserName = (LPSTR)(LPCTSTR)m_InfoServer.UserName;
+	char *srcIP = (LPSTR)(LPCTSTR)m_InfoServer.IP;
+	char *srcPort = (LPSTR)(LPCTSTR)m_InfoServer.Port;
+
+	int RandData;
+	srand((unsigned int)time(0));
+	RandData = rand();
+	char str[8];
+	itoa(RandData, str, 10);
+	strcpy(ToTag, str);
+	RandData = rand();
+	itoa(RandData, str, 10);
+	strcpy(CallID, str);
+
+	char *dest;
+	CSipMsgProcess *SipHeader = new CSipMsgProcess;
+	////////////////////////
+	osip_uri_set_host(SipHeader->m_SipMsg.uriServer, dstIP);
+	osip_uri_set_scheme(SipHeader->m_SipMsg.uriServer, "sip");
+	osip_uri_set_username(SipHeader->m_SipMsg.uriServer, dstCode);
+	osip_uri_set_port(SipHeader->m_SipMsg.uriServer, dstPort);
+
+	osip_uri_set_host(SipHeader->m_SipMsg.uriClient, srcIP);
+	osip_uri_set_scheme(SipHeader->m_SipMsg.uriClient, "sip");
+	osip_uri_set_username(SipHeader->m_SipMsg.uriClient, srcCode);
+	osip_uri_set_port(SipHeader->m_SipMsg.uriClient, srcPort);
+
+	osip_via_set_version(SipHeader->m_SipMsg.via, "2.0");
+	osip_via_set_protocol(SipHeader->m_SipMsg.via, "UDP");
+	osip_via_set_port(SipHeader->m_SipMsg.via, srcPort);
+	//RandData=rand();	
+	//char sdtr[8];	
+	//char branch[20];
+	//itoa(RandData,sdtr,16);
+	//strcpy(branch,"z9hG4bK-");
+	//strcat(branch,sdtr);
+	char branch[20] = "z9hG4bK";
+	for (int i = 0; i < 8; i++)
+	{
+		RandData = rand() % 10;
+		branch[i + 7] = RandData + '0';
+	}
+	osip_via_set_branch(SipHeader->m_SipMsg.via, branch);//随机数
+	osip_via_set_host(SipHeader->m_SipMsg.via, srcIP);
+
+	//osip_call_id_set_host(SipHeader->m_SipMsg.callid, srcIP);
+	osip_call_id_set_number(SipHeader->m_SipMsg.callid, CallID);//随机数	
+																//osip_from_set_displayname(SipHeader->m_SipMsg.from,srcUserName);
+	osip_from_set_tag(SipHeader->m_SipMsg.from, FromTag->gvalue);//随机数
+	osip_to_set_tag(SipHeader->m_SipMsg.to, ToTag);//随机数
+	osip_from_set_url(SipHeader->m_SipMsg.from, SipHeader->m_SipMsg.uriClient);
+
+	//osip_to_set_displayname(SipHeader->m_SipMsg.to,dstUserName);	
+	osip_to_set_url(SipHeader->m_SipMsg.to, SipHeader->m_SipMsg.uriServer);
+
+	osip_cseq_set_method(SipHeader->m_SipMsg.cseq, "Message");
+	osip_cseq_set_number(SipHeader->m_SipMsg.cseq, "1");
+
+	osip_message_set_uri(SipHeader->m_SipMsg.msg, SipHeader->m_SipMsg.uriServer);
+	osip_message_set_method(SipHeader->m_SipMsg.msg, "Message");
+
+	osip_contact_set_url(SipHeader->m_SipMsg.contact, SipHeader->m_SipMsg.uriClient);
+	osip_contact_set_displayname(SipHeader->m_SipMsg.contact, srcUserName);
+
+	osip_to_to_str(SipHeader->m_SipMsg.to, &dest);
+	osip_message_set_to(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_call_id_to_str(SipHeader->m_SipMsg.callid, &dest);
+	osip_message_set_call_id(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_from_to_str(SipHeader->m_SipMsg.from, &dest);
+	osip_message_set_from(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_contact_to_str(SipHeader->m_SipMsg.contact, &dest);
+	osip_message_set_contact(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_cseq_to_str(SipHeader->m_SipMsg.cseq, &dest);
+	osip_message_set_cseq(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+
+	osip_via_to_str(SipHeader->m_SipMsg.via, &dest);
+	osip_message_set_via(SipHeader->m_SipMsg.msg, dest);
+	osip_free(dest);
+	osip_message_set_content_type(SipHeader->m_SipMsg.msg, "Application/MANSCDP+XML");
+	osip_message_set_body(SipHeader->m_SipMsg.msg, Xml, strlen(Xml));
+	size_t length;
+	osip_message_set_max_forwards(SipHeader->m_SipMsg.msg, "70");
+	osip_message_to_str(SipHeader->m_SipMsg.msg, &dest, &length);
+
+	strcpy(*dst, dest);
+	osip_free(dest);
 }
 
 int CSipMsgProcess::CreateXMLFlowQuery(char **dstXML)
@@ -4105,7 +4496,7 @@ int CSipMsgProcess::CreateXMLFlowQuery(char **dstXML)
 	strTemp = "<?xml version=\"1.0\"?>\r\n";
 	strTemp += "<Response>\r\n";
 	strTemp += "<QueryResponse>\r\n";
-	strTemp += "<Variable>BandWidth</Variable>\r\n";
+	strTemp += "<CmdType>BandWidth</CmdType>\r\n";
 	strTemp += "<Result>0</Result>\r\n";	
 	strTemp += "<Manufacturer>uniview</Manufacturer>\r\n";
 	strTemp += "<All>256</All>\r\n";
@@ -4184,58 +4575,58 @@ BOOL CSipMsgProcess::NodeAnylse(InfoNotify& NotifyInfo, char *buf)
 	string strTemp(buf);
 	string temp;
 	string::size_type VideoStart = 0;
-	string::size_type VariableStart;
-	string::size_type VariableEnd;
+	string::size_type CmdTypeStart;
+	string::size_type CmdTypeEnd;
 	//InfoVideo Video;
 	int varCount = 0;
 	int nVideo = 0;
-	VariableStart = strTemp.find("<Parent>", VideoStart + 1);
-	VariableEnd = strTemp.find("</Parent>", VariableStart + 1);
-	if (VariableStart != string::npos && VariableEnd != string::npos)
-		NotifyInfo.Parent = strTemp.substr(VariableStart + 8, VariableEnd - VariableStart - 8).c_str();
+	CmdTypeStart = strTemp.find("<Parent>", VideoStart + 1);
+	CmdTypeEnd = strTemp.find("</Parent>", CmdTypeStart + 1);
+	if (CmdTypeStart != string::npos && CmdTypeEnd != string::npos)
+		NotifyInfo.Parent = strTemp.substr(CmdTypeStart + 8, CmdTypeEnd - CmdTypeStart - 8).c_str();
 	/*
-	VariableStart = strTemp.find("<TotalSubNum>", VideoStart + 1);
-	VariableEnd = strTemp.find("</TotalSubNum>", VariableStart + 1);
-	if (VariableStart != string::npos && VariableEnd != string::npos)
-	NotifyInfo.TotalSubNum = strTemp.substr(VariableStart + 13, VariableEnd - VariableStart - 13).c_str();
+	CmdTypeStart = strTemp.find("<TotalSubNum>", VideoStart + 1);
+	CmdTypeEnd = strTemp.find("</TotalSubNum>", CmdTypeStart + 1);
+	if (CmdTypeStart != string::npos && CmdTypeEnd != string::npos)
+	NotifyInfo.TotalSubNum = strTemp.substr(CmdTypeStart + 13, CmdTypeEnd - CmdTypeStart - 13).c_str();
 
-	VariableStart = strTemp.find("<TotalOnlineSubNum>", VideoStart + 1);
-	VariableEnd = strTemp.find("</TotalOnlineSubNum>", VariableStart + 1);
-	if (VariableStart != string::npos && VariableEnd != string::npos)
-	NotifyInfo.TotalOnlineSubNum = strTemp.substr(VariableStart + 8, VariableEnd - VariableStart - 8).c_str();
+	CmdTypeStart = strTemp.find("<TotalOnlineSubNum>", VideoStart + 1);
+	CmdTypeEnd = strTemp.find("</TotalOnlineSubNum>", CmdTypeStart + 1);
+	if (CmdTypeStart != string::npos && CmdTypeEnd != string::npos)
+	NotifyInfo.TotalOnlineSubNum = strTemp.substr(CmdTypeStart + 8, CmdTypeEnd - CmdTypeStart - 8).c_str();
 
-	VariableStart = strTemp.find("<Parent>", VideoStart + 1);
-	VariableEnd = strTemp.find("</Parent>", VariableStart + 1);
-	if (VariableStart != string::npos && VariableEnd != string::npos)
-	NotifyInfo.Parent = strTemp.substr(VariableStart + 8, VariableEnd - VariableStart - 8).c_str();
+	CmdTypeStart = strTemp.find("<Parent>", VideoStart + 1);
+	CmdTypeEnd = strTemp.find("</Parent>", CmdTypeStart + 1);
+	if (CmdTypeStart != string::npos && CmdTypeEnd != string::npos)
+	NotifyInfo.Parent = strTemp.substr(CmdTypeStart + 8, CmdTypeEnd - CmdTypeStart - 8).c_str();
 
 	*/
 	while ((VideoStart = strTemp.find("<Item>", VideoStart)) != string::npos)
 	{
 		InfoDvice infoDviceT;
 		//Name字段
-		if ((VariableStart = strTemp.find("<Name>", VideoStart + 1)) == string::npos)
+		if ((CmdTypeStart = strTemp.find("<Name>", VideoStart + 1)) == string::npos)
 			break;
-		if ((VariableEnd = strTemp.find("</Name>", VariableStart + 1)) == string::npos)
+		if ((CmdTypeEnd = strTemp.find("</Name>", CmdTypeStart + 1)) == string::npos)
 			break;
-		infoDviceT.Name = strTemp.substr(VariableStart + 6, VariableEnd - VariableStart - 6).c_str();
+		infoDviceT.Name = strTemp.substr(CmdTypeStart + 6, CmdTypeEnd - CmdTypeStart - 6).c_str();
 
 		//Address字段
-		if ((VariableStart = strTemp.find("<Address>", VideoStart + 1)) == string::npos)
+		if ((CmdTypeStart = strTemp.find("<Address>", VideoStart + 1)) == string::npos)
 			break;
-		if ((VariableEnd = strTemp.find("</Address>", VariableStart + 1)) == string::npos)
+		if ((CmdTypeEnd = strTemp.find("</Address>", CmdTypeStart + 1)) == string::npos)
 			break;
-		infoDviceT.Address = strTemp.substr(VariableStart + 9, VariableEnd - VariableStart - 9).c_str();
+		infoDviceT.Address = strTemp.substr(CmdTypeStart + 9, CmdTypeEnd - CmdTypeStart - 9).c_str();
 		/*
 		//ResType
-		if ((VariableStart = strTemp.find("<ResType>", VideoStart + 1)) == string::npos)
+		if ((CmdTypeStart = strTemp.find("<ResType>", VideoStart + 1)) == string::npos)
 		break;
-		if ((VariableEnd = strTemp.find("</ResType>", VariableStart + 1)) == string::npos)
+		if ((CmdTypeEnd = strTemp.find("</ResType>", CmdTypeStart + 1)) == string::npos)
 		break;
-		infoDviceT.ResType = strTemp.substr(VariableStart + 9, VariableEnd - VariableStart - 9).c_str();
+		infoDviceT.ResType = strTemp.substr(CmdTypeStart + 9, CmdTypeEnd - CmdTypeStart - 9).c_str();
 		*/
 		NotifyInfo.Devices.push_back(infoDviceT);
-		VideoStart = VariableEnd + 1;
+		VideoStart = CmdTypeEnd + 1;
 	}
 	return TRUE;
 }

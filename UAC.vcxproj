@@ -143,7 +143,6 @@
     <ClCompile Include="MySocket.cpp" />
     <ClCompile Include="NetSet.cpp" />
     <ClCompile Include="PSTVSetTime.cpp" />
-    <ClCompile Include="PTZ.cpp" />
     <ClCompile Include="SetTestMember.cpp" />
     <ClCompile Include="SipMsgProcess.cpp" />
     <ClCompile Include="stdafx.cpp">
@@ -152,8 +151,6 @@
     </ClCompile>
     <ClCompile Include="UAC.cpp" />
     <ClCompile Include="UACDlg.cpp" />
-    <ClCompile Include="VideoPlay.cpp" />
-    <ClCompile Include="VideoQuery.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Alarm.h" />
@@ -166,7 +163,6 @@
     <ClInclude Include="MySocket.h" />
     <ClInclude Include="NetSet.h" />
     <ClInclude Include="PSTVSetTime.h" />
-    <ClInclude Include="PTZ.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SetTestMember.h" />
     <ClInclude Include="SipMsgProcess.h" />
@@ -174,8 +170,6 @@
     <ClInclude Include="targetver.h" />
     <ClInclude Include="UAC.h" />
     <ClInclude Include="UACDlg.h" />
-    <ClInclude Include="VideoPlay.h" />
-    <ClInclude Include="VideoQuery.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\UAC.ico" />

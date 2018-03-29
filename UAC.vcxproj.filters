@@ -33,9 +33,6 @@
     <ClCompile Include="NetSet.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PTZ.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="SetTestMember.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -49,12 +46,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UACDlg.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VideoPlay.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="VideoQuery.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="md5.c">
@@ -89,9 +80,6 @@
     <ClInclude Include="NetSet.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PTZ.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -111,12 +99,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UACDlg.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VideoPlay.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="VideoQuery.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="md5.h">

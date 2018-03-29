@@ -57,12 +57,10 @@ void CPSTVSetTime::OnBnClickedButtonPstvtime()
 	//get information and create XML message	
 	string XmlTimeSet;
 	XmlTimeSet = "<?xml version=\"1.0\"?>\r\n";
-	XmlTimeSet += "<Action>\r\n";
 	XmlTimeSet += "<Notify>\r\n";
-	XmlTimeSet += "<Variable>TimeGet</Variable>\r\n";
+	XmlTimeSet += "<CmdType>TimeGet</CmdType>\r\n";
 	XmlTimeSet += "<Privilege>"+ privilege + "</Privilege>\r\n";
 	XmlTimeSet += "</Notify>\r\n";
-	XmlTimeSet += "</Action>\r\n";
 	char *xml = new char[XMLSIZE];
 	memset(xml, 0, XMLSIZE);
 	strcpy(xml, XmlTimeSet.c_str());

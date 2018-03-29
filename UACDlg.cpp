@@ -96,6 +96,7 @@ BEGIN_MESSAGE_MAP(CUACDlg, CDialog)
 	ON_CBN_SELCHANGE(IDC_COMBO1, &CUACDlg::OnCbnSelchangeCombo1)
 	ON_BN_CLICKED(IDC_BUTTON_REBOOT, &CUACDlg::OnBnClickedButtonReboot)
 	ON_BN_CLICKED(IDC_CHECK1, &CUACDlg::OnBnClickedCheck1)
+	ON_BN_CLICKED(IDC_BTN_SIP_QUIT, &CUACDlg::OnBnClickedBtnSipQuit)
 END_MESSAGE_MAP()
 
 // CUACDlg 消息处理程序
@@ -310,18 +311,12 @@ void CUACDlg::InitProgram()
 	//初始化标签页
 	m_Ctab.InsertItem(0,_T("网络设置"));
 	m_Ctab.InsertItem(1,_T("实时流"));
-	m_Ctab.InsertItem(2,_T("云台控制"));
-	m_Ctab.InsertItem(3,_T("视频查询"));
-	m_Ctab.InsertItem(4,_T("视频回放"));
-	m_Ctab.InsertItem(5,_T("报警测试"));
-	m_Ctab.InsertItem(6,_T("编码器设置")); 
-	m_Ctab.InsertItem(7,_T("时间主动校对")); 
+	m_Ctab.InsertItem(2,_T("报警测试"));
+	m_Ctab.InsertItem(3,_T("编码器设置")); 
+	m_Ctab.InsertItem(4,_T("时间主动校对")); 
 	//为标签页添加初始化对话框
 	m_NetSet.Create(IDD_DLG_NETSET,GetDlgItem(IDC_TAB));
 	m_Invite.Create(IDD_DLG_INVITE,GetDlgItem(IDC_TAB));
-	m_PTZ.Create(IDD_DLG_PTZ,GetDlgItem(IDC_TAB));
-	m_VideoQuery.Create(IDD_DLG_VIDEOQUERY,GetDlgItem(IDC_TAB));
-	m_VideoPlay.Create(IDD_DLG_VIDEOPLAY,GetDlgItem(IDC_TAB));
 	m_CoderSet.Create(IDD_DLG_CODER_SET,GetDlgItem(IDC_TAB));
 	m_Alarm.Create(IDD_DLG_ALARM,GetDlgItem(IDC_TAB));
 	m_PSTVSetTime.Create(IDD_DLG_PSTVTIME,GetDlgItem(IDC_TAB));
@@ -336,9 +331,6 @@ void CUACDlg::InitProgram()
 	//设置子对话框尺寸并移动到指定位置
 	m_NetSet.MoveWindow(&rect);
 	m_Invite.MoveWindow(&rect);
-	m_PTZ.MoveWindow(&rect);
-	m_VideoQuery.MoveWindow(&rect);
-	m_VideoPlay.MoveWindow(&rect);
 	m_CoderSet.MoveWindow(&rect);
 	m_Alarm.MoveWindow(&rect);
 	m_PSTVSetTime.MoveWindow(&rect);
@@ -379,9 +371,6 @@ void CUACDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 	case 0:
 		m_NetSet.ShowWindow(true);
 		m_Invite.ShowWindow(false);
-		m_PTZ.ShowWindow(false);
-		m_VideoQuery.ShowWindow(false);
-		m_VideoPlay.ShowWindow(false);
 		m_CoderSet.ShowWindow(false);	
 		m_Alarm.ShowWindow(false); 	
 		m_PSTVSetTime.ShowWindow(false);
@@ -389,9 +378,6 @@ void CUACDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 	case 1:		
 		m_NetSet.ShowWindow(false);
 		m_Invite.ShowWindow(true);
-		m_PTZ.ShowWindow(false);
-		m_VideoQuery.ShowWindow(false);
-		m_VideoPlay.ShowWindow(false);
 		m_CoderSet.ShowWindow(false);	
 		m_Alarm.ShowWindow(false);
 		m_PSTVSetTime.ShowWindow(false);
@@ -399,59 +385,20 @@ void CUACDlg::OnTcnSelchangeTab(NMHDR *pNMHDR, LRESULT *pResult)
 	case 2:	
 		m_NetSet.ShowWindow(false);
 		m_Invite.ShowWindow(false);
-		m_PTZ.ShowWindow(true);
-		m_VideoQuery.ShowWindow(false);
-		m_VideoPlay.ShowWindow(false);
-		m_CoderSet.ShowWindow(false);	
-		m_Alarm.ShowWindow(false);
-		m_PSTVSetTime.ShowWindow(false);
-		break;
-	case 3:	
-		m_NetSet.ShowWindow(false);
-		m_Invite.ShowWindow(false);
-		m_PTZ.ShowWindow(false);
-		m_VideoQuery.ShowWindow(true);
-		m_VideoPlay.ShowWindow(false);
-		m_CoderSet.ShowWindow(false);	
-		m_Alarm.ShowWindow(false);
-		m_PSTVSetTime.ShowWindow(false);
-		break;
-	case 4:	
-		m_NetSet.ShowWindow(false);
-		m_Invite.ShowWindow(false);
-		m_PTZ.ShowWindow(false);
-		m_VideoQuery.ShowWindow(false);
-		m_VideoPlay.ShowWindow(true);
-		m_CoderSet.ShowWindow(false);	
-		m_Alarm.ShowWindow(false);
-		m_PSTVSetTime.ShowWindow(false);
-		break;
-	case 5:	
-		m_NetSet.ShowWindow(false);
-		m_Invite.ShowWindow(false);
-		m_PTZ.ShowWindow(false);
-		m_VideoQuery.ShowWindow(false);
-		m_VideoPlay.ShowWindow(false);
 		m_Alarm.ShowWindow(true);
 		m_CoderSet.ShowWindow(false);
 		m_PSTVSetTime.ShowWindow(false);
 		break;	
-	case 6:	
+	case 3:	
  		m_NetSet.ShowWindow(false);
  		m_Invite.ShowWindow(false);
- 		m_PTZ.ShowWindow(false);
- 		m_VideoQuery.ShowWindow(false);
- 		m_VideoPlay.ShowWindow(false);
  		m_Alarm.ShowWindow(false);
  		m_CoderSet.ShowWindow(true);
 		m_PSTVSetTime.ShowWindow(false);
  		break;
-	case 7:
+	case 4:
 		m_NetSet.ShowWindow(false);
 		m_Invite.ShowWindow(false);
-		m_PTZ.ShowWindow(false);
-		m_VideoQuery.ShowWindow(false);
-		m_VideoPlay.ShowWindow(false);
 		m_CoderSet.ShowWindow(false);
 		m_Alarm.ShowWindow(false);
 		m_PSTVSetTime.ShowWindow(true);
@@ -621,13 +568,15 @@ void CUACDlg::InitNetSet()
 
 void CUACDlg::InitAlarm()
 {
-	m_Alarm.GetDlgItem(IDC_EDIT_ADDRESS)->SetWindowText("011061430001");
-	m_Alarm.GetDlgItem(IDC_EDIT_PRIVILEGE)->SetWindowText("20");
-	m_Alarm.GetDlgItem(IDC_EDIT_LEVEL)->SetWindowText("1");
+	m_Alarm.GetDlgItem(IDC_EDIT_ADDRESS)->SetWindowText("011051430001");
+	m_Alarm.GetDlgItem(IDC_EDIT_PRIVILEGE)->SetWindowText("4");
+	//m_Alarm.GetDlgItem(IDC_EDIT_LEVEL)->SetWindowText("1");
 	m_Alarm.m_AlarmTypeSel.SetCurSel(0);
 	m_Alarm.GetDlgItem(IDC_ALARMTYPENUM)->SetWindowText("1");//表示高温报警
-	m_Alarm.GetDlgItem(IDC_EDIT_ACCEPTIP)->SetWindowText("192.168.1.7");
-	m_Alarm.GetDlgItem(IDC_EDIT_ACCEPTPORT)->SetWindowText("5060");
+	m_Alarm.GetDlgItem(IDC_EDIT_ACCEPTIP)->SetWindowText("2017-12-04T16:23:32");
+	m_Alarm.GetDlgItem(IDC_EDIT_ACCEPTPORT)->SetWindowText("警情描述");
+	m_Alarm.GetDlgItem(IDC_EDIT_LONGITUDE)->SetWindowText("171.3");
+	m_Alarm.GetDlgItem(IDC_EDIT_LATITUDE)->SetWindowText("34.2");
 }
 
 void CUACDlg::InitEnableWindow()
@@ -679,7 +628,7 @@ int CUACDlg::InitSocket(int port)
 	if(SOCKET_ERROR==revel)
 	{
 		closesocket(m_socket);		
-		MessageBox("端口已被占用","UAC 提示",MB_OK|MB_ICONINFORMATION);
+		MessageBox("端口已被占用，请重启或使用可用端口","UAC 提示",MB_OK|MB_ICONINFORMATION);
 		return -1;
 	}	
 	return 0;//初始化socket成功
@@ -883,32 +832,7 @@ void CUACDlg::OnBnClickedBtnSipRegister()
 		{
 			return;
 		}
-		/*FILE *TestIP=NULL;
-		TestIP=fopen("UAC处理IP地址.txt","r");	
-		char *temp=new char[40];
-		int i=0;
-		if (TestIP!=NULL)
-		{
-			while (1)
-			{
-				if(feof(TestIP))
-					break;
-				fscanf(TestIP,"%s\n",temp);
-				strcpy(ProcessIP,temp);				
-				i++;			
-			}
-		} 
-		else
-		{
-			TestIP=fopen("UAC处理IP地址.txt","w");			
-			fprintf(TestIP,"192.168.1.16");	
-			strcpy(ProcessIP,"192.168.1.16");
-		}	
-		if (TestIP)
-		{
-			fclose(TestIP);
-		}
-		delete []temp;*/
+		
 		CString cstrUser,cstrPassword;
 		GetDlgItemText(IDC_USERNAMEC,cstrUser);
 		GetDlgItemText(IDC_PASSWORDC,cstrPassword);
@@ -943,7 +867,7 @@ void CUACDlg::OnBnClickedBtnSipRegister()
 			memset(data,0,MAXBUFSIZE);
 			CSipMsgProcess *sip;
 			sip=new CSipMsgProcess;
-			sip->SipRegisterCreate(&data,m_InfoServer,m_InfoClient);
+			sip->SipRegisterOrQuitCreate(true,&data,m_InfoServer,m_InfoClient);
 			//带有权签
 			//sip->SipRegisterWithAuthCreate(&data,m_InfoServer,m_InfoClient);
 			UA_Msg uac_sendtemp;
@@ -959,7 +883,6 @@ void CUACDlg::OnBnClickedBtnSipRegister()
 			ShowTestLogData+="REGISTER ------->  \r\n";
 		}
 
-		//开启SIP按钮不可用
 		EnableWindow(IDC_BTN_SIP_REGISTER,FALSE);//注册按钮不可用
 		m_NetSet.m_kAlterBtn.EnableWindow(FALSE);
 		EnableWindow(IDC_BTN_LOG,TRUE);
@@ -1032,7 +955,7 @@ void CUACDlg::OnTimer(UINT_PTR nIDEvent)
 				string xml="<?xml version=\"1.0\"?>\r\n";
 				xml+="<Action>\r\n";
 				xml+="<Notify>\r\n";
-				xml+="<Variable>KeepAlive</Variable>\r\n";
+				xml+="<CmdType>KeepAlive</CmdType>\r\n";
 				xml+="</Notify>\r\n";
 				xml+="</Action>\r\n";	
 				char *strxml=new char[XMLSIZE];
@@ -1081,25 +1004,25 @@ int CUACDlg::AnalyseMsg(char* msg)
 	string sessiontemp;
 	string setupTemp;
 	string dest;	
-	string::size_type VariableStart;
-	string::size_type VariableEnd;	
-	if ( (VariableStart=strTemp.find("OPTIONS",0)) !=string::npos )
+	string::size_type CmdTypeStart;
+	string::size_type CmdTypeEnd;	
+	if ( (CmdTypeStart=strTemp.find("OPTIONS",0)) !=string::npos )
 	{
 		dest="RTSP/1.0 200 OK\r\n";		
-		if( (VariableStart=strTemp.find("CSeq:",0)) !=string::npos )
+		if( (CmdTypeStart=strTemp.find("CSeq:",0)) !=string::npos )
 		{				
-			if( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+			if( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 			{				
-				temp=strTemp.substr(VariableStart,VariableEnd-VariableStart);
+				temp=strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);
 				dest+=temp;
 				dest+="\r\n";
 			}
 		}
-		if ( (VariableStart=strTemp.find("Session:",0)) !=string::npos)
+		if ( (CmdTypeStart=strTemp.find("Session:",0)) !=string::npos)
 		{
-			if( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+			if( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 			{				
-				sessiontemp=strTemp.substr(VariableStart,VariableEnd-VariableStart);
+				sessiontemp=strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);
 				dest+=sessiontemp;
 				dest+="\r\n";
 			}
@@ -1111,11 +1034,11 @@ int CUACDlg::AnalyseMsg(char* msg)
 			//ShowSendData(dest.c_str());			
 			brtspKeeplive=TRUE;
 			bRtspLive=TRUE;
-			if ( (VariableStart=strTemp.find("Session:",0)) !=string::npos)
+			if ( (CmdTypeStart=strTemp.find("Session:",0)) !=string::npos)
 			{
-				if( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+				if( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 				{				
-					Session=strTemp.substr(VariableStart,VariableEnd-VariableStart);	
+					Session=strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);	
 					bRtspLiveFlag=TRUE;
 				}
 			}
@@ -1128,14 +1051,14 @@ int CUACDlg::AnalyseMsg(char* msg)
 		}
 		temp.erase(0,temp.length());		
 	}
-	else if ( (VariableStart=strTemp.find("DESCRIBE",0)) !=string::npos )
+	else if ( (CmdTypeStart=strTemp.find("DESCRIBE",0)) !=string::npos )
 	{
 		dest="RTSP/1.0 200 OK\r\n";
-		if( (VariableStart=strTemp.find("CSeq:",0)) !=string::npos )
+		if( (CmdTypeStart=strTemp.find("CSeq:",0)) !=string::npos )
 		{				
-			if( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+			if( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 			{			
-				temp=strTemp.substr(VariableStart,VariableEnd-VariableStart);	
+				temp=strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);	
 				dest+=temp;
 				dest+="\r\n";
 			}
@@ -1148,23 +1071,23 @@ int CUACDlg::AnalyseMsg(char* msg)
 		//ShowSendData(dest.c_str());	
 		temp.erase(0,temp.length());
 	}
-	else if ( (VariableStart=strTemp.find("SETUP",0)) !=string::npos )
+	else if ( (CmdTypeStart=strTemp.find("SETUP",0)) !=string::npos )
 	{
 		dest="RTSP/1.0 200 OK\r\n";
-		if( (VariableStart=strTemp.find("CSeq:",0)) !=string::npos )
+		if( (CmdTypeStart=strTemp.find("CSeq:",0)) !=string::npos )
 		{				
-			if( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+			if( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 			{			
-				setupTemp = strTemp.substr(VariableStart,VariableEnd-VariableStart);
+				setupTemp = strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);
 				dest += setupTemp;
 				dest += "\r\n";
 			}
 		}
-		if ( (VariableStart=strTemp.find("Transport:",0)) !=string::npos )
+		if ( (CmdTypeStart=strTemp.find("Transport:",0)) !=string::npos )
 		{
-			if ( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+			if ( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 			{
-				temp=strTemp.substr(VariableStart,VariableEnd-VariableStart);
+				temp=strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);
 			}
 			dest+=Session;	
 			dest+="\r\n";
@@ -1180,41 +1103,41 @@ int CUACDlg::AnalyseMsg(char* msg)
 			return 1;
 		}		
 	}
-	else if ( (VariableStart=strTemp.find("PLAY",0)) !=string::npos )
+	else if ( (CmdTypeStart=strTemp.find("PLAY",0)) !=string::npos )
 	{
 		dest="RTSP/1.0 200 OK\r\n";
-		if ( (VariableStart=strTemp.find("CSeq:",0)) !=string::npos )
+		if ( (CmdTypeStart=strTemp.find("CSeq:",0)) !=string::npos )
 		{
-			if ( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+			if ( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 			{
-				temp=strTemp.substr(VariableStart,VariableEnd-VariableStart);
+				temp=strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);
 				dest+=temp;	
 				dest+="\r\n";
 			}		
 		}
-		if ( (VariableStart=strTemp.find("Session:",0)) !=string::npos )
+		if ( (CmdTypeStart=strTemp.find("Session:",0)) !=string::npos )
 		{
-			if ( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+			if ( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 			{
-				temp=strTemp.substr(VariableStart,VariableEnd-VariableStart);
+				temp=strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);
 				dest+=temp;	
 				dest+="\r\n";
 			}		
 		}
-		if ( (VariableStart=strTemp.find("Range:",0)) !=string::npos )
+		if ( (CmdTypeStart=strTemp.find("Range:",0)) !=string::npos )
 		{
-			if ( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+			if ( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 			{
-				temp=strTemp.substr(VariableStart,VariableEnd-VariableStart);
+				temp=strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);
 				dest+=temp;	
 				dest+="\r\n";
 			}		
 		}
-		if ( (VariableStart=strTemp.find("Scale:",0)) !=string::npos )
+		if ( (CmdTypeStart=strTemp.find("Scale:",0)) !=string::npos )
 		{
-			if ( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+			if ( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 			{
-				temp=strTemp.substr(VariableStart,VariableEnd-VariableStart);
+				temp=strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);
 				dest+=temp;	
 				dest+="\r\n";
 			}		
@@ -1224,23 +1147,23 @@ int CUACDlg::AnalyseMsg(char* msg)
 		//ShowSendData(dest.c_str());
 		temp.erase(0,temp.length());		
 	}
-	else if ( (VariableStart=strTemp.find("TEARDOWN",0)) !=string::npos )
+	else if ( (CmdTypeStart=strTemp.find("TEARDOWN",0)) !=string::npos )
 	{
 		dest="RTSP/1.0 200 OK\r\n";
-		if ( (VariableStart=strTemp.find("CSeq:",0)) !=string::npos )
+		if ( (CmdTypeStart=strTemp.find("CSeq:",0)) !=string::npos )
 		{
-			if ( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+			if ( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 			{
-				temp=strTemp.substr(VariableStart,VariableEnd-VariableStart);
+				temp=strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);
 				dest+=temp;	
 				dest+="\r\n";
 			}		
 		}
-		if ( (VariableStart=strTemp.find("Session:",0)) !=string::npos )
+		if ( (CmdTypeStart=strTemp.find("Session:",0)) !=string::npos )
 		{
-			if ( (VariableEnd=strTemp.find("\r\n",VariableStart)) !=string::npos )
+			if ( (CmdTypeEnd=strTemp.find("\r\n",CmdTypeStart)) !=string::npos )
 			{
-				temp=strTemp.substr(VariableStart,VariableEnd-VariableStart);
+				temp=strTemp.substr(CmdTypeStart,CmdTypeEnd-CmdTypeStart);
 				dest+=temp;	
 				dest+="\r\n";
 			}		
@@ -1378,4 +1301,27 @@ void CUACDlg::OnBnClickedButtonReboot()
 void CUACDlg::OnBnClickedCheck1()
 {
 	m_bIsShowKeepAliveMsg = IsDlgButtonChecked(IDC_CHECK1);
+}
+
+
+void CUACDlg::OnBnClickedBtnSipQuit()
+{
+	char *data = new char[MAXBUFSIZE];
+	memset(data, 0, MAXBUFSIZE);
+	CSipMsgProcess *sip;
+	sip = new CSipMsgProcess;
+	sip->SipRegisterOrQuitCreate(false,&data, m_InfoServer, m_InfoClient);
+	//带有权签
+	//sip->SipRegisterWithAuthCreate(&data,m_InfoServer,m_InfoClient);
+	UA_Msg uac_sendtemp;
+	strcpy(uac_sendtemp.data, data);
+
+	//SIP会话的安全机制
+	EnterCriticalSection(&g_uac);
+	uac_sendqueue.push(uac_sendtemp);
+	LeaveCriticalSection(&g_uac);
+
+	delete data;
+	ShowTestLogTitle = "Quit Test";
+	ShowTestLogData += "Quit ------->  \r\n";
 }

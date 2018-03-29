@@ -35,7 +35,7 @@ private:
 		osip_uri_t *uriClient;
 	} m_SipMsg;
 	
-	//event variable
+	//event CmdType
 	int m_Type;
 public:
 	int SipParser(char *buffer,int Msglength);
@@ -43,8 +43,8 @@ public:
 	BOOL RegisterSipVerify(InfoServer m_InfoServer,InfoClient m_InfoClient,osip_message_t *srcMsg,int nto);
 	void DOKeepAliveMsg(char **dst,InfoServer m_InfoServer,InfoClient m_InfoClient,char *Xml);
 	//register message
-	int SipRegisterCreate(char **strRegister,InfoServer m_InfoServer,InfoClient m_InfoClient);
-	int SipRegisterWithAuthCreate(char **strRegister,InfoServer m_InfoServer,InfoClient m_InfoClient,osip_message_t *srcmsg);
+	int SipRegisterOrQuitCreate(bool isRegister,char **strRegister,InfoServer m_InfoServer,InfoClient m_InfoClient);
+	int SipRegisterOrQuitWithAuthCreate(char **strRegister,InfoServer m_InfoServer,InfoClient m_InfoClient,osip_message_t *srcmsg);
 	//node message
 	void XmlNodeCreate(char** strNodeXml);
 	void XmlNodeCreate1(char** strNodeXml); 
@@ -57,7 +57,9 @@ public:
 	//alarm subscribe notify
 	void SipAlarmSubscribeNotify(char **dst,InfoServer m_InfoServer,InfoClient m_InfoClient,osip_message_t *srcmsg);
 	BOOL XmlAlarmCreate(char** strAlarmXml,char *srcXml);
-	//clone from and to variable
+
+
+	//clone from and to CmdType
 	void Sip200OK(char **dst,osip_message_t *srcmsg);
 	void SipInvite400(char **dst,osip_message_t *srcmsg);
 	void SipInvite200Xml(char **dstBuf,osip_message_t *srcmsg,CString Xml);
@@ -76,8 +78,25 @@ public:
 	int CreateXMLVideoQuery_c(char **dstXML,int begin,int end);
 	int CreateXMLVideoQuery_h(char **dstXML, CTime begin, CTime end, int max);
 	int CreateXMLCatalogQuery(char **dstXML);
+
+	/****************************************************************************************************************************/
+	/*add some function for GB28181**********/
+	/****************************************************************************************************************************/
+	void SipAlarmEventNoticeDistribute(char **dst, InfoServer m_InfoServer, InfoClient m_InfoClient, char *Xml);
+	
+	int CreateXMLVideoAudioQueryNode(char **dstXML);
+	void SipVideoAudioQueryXml(char **dst, InfoServer m_InfoServer, InfoClient m_InfoClient, char *Xml, osip_uri_param_t *FromTag);
+
+	int CreateXMLDeviceInfoQueryNode(char **dstXML);
+	void SipDeviceInfoQueryXml(char **dst, InfoServer m_InfoServer, InfoClient m_InfoClient, char *Xml, osip_uri_param_t *FromTag);
+
 	int CreateXMLCatalogQueryNote(char ** dstXML);
-	int CreateXMLDeviceInfQuery(char **dstXML);
+	void SipCatalogQueryXml(char **dst, InfoServer m_InfoServer, InfoClient m_InfoClient, char *Xml, osip_uri_param_t *FromTag);
+	
+	int CreateXMLDeviceStatusQueryNode(char ** dstXML);  
+	void SipDeviceStatusQueryXml(char **dst, InfoServer m_InfoServer, InfoClient m_InfoClient, char *Xml, osip_uri_param_t *FromTag);
+	
+
 	int CreateXMLFlowQuery(char **dstXML);
 	void SipBYE(char **dst,osip_message_t *srcmsg);
 
